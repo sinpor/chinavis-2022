@@ -1,5 +1,5 @@
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
-import { Layout } from "./layout/Layout";
+import { AppLayout as Layout } from "./layout/Layout";
 import { Home } from "./pages/home";
 
 function App() {

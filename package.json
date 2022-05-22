@@ -8,10 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@emotion/react": "^11.9.0",
-    "@emotion/styled": "^11.8.1",
-    "@fontsource/roboto": "^4.5.5",
-    "@mui/material": "^5.7.0",
+    "antd": "^4.20.5",
     "eslint": "^8.15.0",
     "prettier": "^2.6.2",
     "react": "^18.0.0",
