@@ -9,8 +9,6 @@ export const Force: React.FC = () => {
 
     const initChart = useCallback(
         (nodes: any[], links: any[]) => {
-            console.log(box);
-
             function nodeId(d: any) {
                 return d.id;
             }
@@ -25,25 +23,25 @@ export const Force: React.FC = () => {
             const linkStrokeWidth = 1.5;
             // Compute values.
 
-            const N = d3.map(nodes, nodeId).map(intern);
-            const LS = d3.map(links, linkSource).map(intern);
-            const LT = d3.map(links, linkTarget).map(intern);
+            const N = nodes.map(nodeId).map(intern);
+            const LS = links.map(linkSource).map(intern);
+            const LT = links.map(linkTarget).map(intern);
             // if (nodeTitle === undefined) nodeTitle = (_, i) => N[i];
-            const T = nodeTitle == null ? null : d3.map(nodes, nodeTitle);
+            const T = nodeTitle == null ? null : nodes.map(nodeTitle);
             const G =
-                nodeGroup == null ? null : d3.map(nodes, nodeGroup).map(intern);
+                nodeGroup == null ? null : nodes.map(nodeGroup).map(intern);
             const W =
                 typeof linkStrokeWidth !== "function"
                     ? null
-                    : d3.map(links, linkStrokeWidth);
+                    : links.map(linkStrokeWidth);
 
             // Replace the input nodes and links with mutable objects for the simulation.
-            nodes = d3.map(nodes, (_, i) => ({ id: N[i] }));
-            links = d3.map(links, (_, i) => ({ source: LS[i], target: LT[i] }));
+            nodes = nodes.map((_, i) => ({ id: N[i] }));
+            links = links.map((_, i) => ({ source: LS[i], target: LT[i] }));
 
             // Compute default domains.
             let nodeGroups: any;
-            if (G) nodeGroups = d3.sort(G);
+            if (G) nodeGroups = G.sort();
 
             const colors = d3.schemeTableau10;
 
@@ -84,23 +82,22 @@ export const Force: React.FC = () => {
 
             svg.html("");
 
-            svg.attr("width", width)
-                .attr("height", height)
-                .attr("viewBox", [-width / 2, -height / 2, width, height])
-                .attr(
-                    "style",
-                    "max-width: 100%; height: auto; height: intrinsic;"
-                );
+            svg.attr(
+                "style",
+                "max-width: 100%; height: auto; height: intrinsic;"
+            );
 
-            const link = svg
+            const globalG = svg
+                .append("g")
+                .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+            const link = globalG
                 .append("g")
                 .attr("stroke", linkStroke)
                 .attr("stroke-opacity", linkStrokeOpacity)
                 .attr(
                     "stroke-width",
-                    typeof linkStrokeWidth !== "function"
-                        ? linkStrokeWidth
-                        : null
+                    typeof linkStrokeWidth !== "function" ? linkStrokeWidth : ""
                 )
                 .attr("stroke-linecap", linkStrokeLinecap)
                 .selectAll("line")
@@ -109,7 +106,7 @@ export const Force: React.FC = () => {
 
             if (W) link.attr("stroke-width", ({ index: i }: any): any => W[i]);
 
-            const node = svg
+            const node = globalG
                 .append("g")
                 .attr("fill", nodeFill)
                 .attr("stroke", nodeStroke)
@@ -143,21 +140,21 @@ export const Force: React.FC = () => {
             }
 
             function drag(simulation: any) {
-                function dragstarted(event: any) {
-                    if (!event.active) simulation.alphaTarget(0.3).restart();
-                    event.subject.fx = event.subject.x;
-                    event.subject.fy = event.subject.y;
+                function dragstarted() {
+                    if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+                    d3.event.subject.fx = d3.event.subject.x;
+                    d3.event.subject.fy = d3.event.subject.y;
                 }
 
-                function dragged(event: any) {
-                    event.subject.fx = event.x;
-                    event.subject.fy = event.y;
+                function dragged() {
+                    d3.event.subject.fx = d3.event.x;
+                    d3.event.subject.fy = d3.event.y;
                 }
 
-                function dragended(event: any) {
-                    if (!event.active) simulation.alphaTarget(0);
-                    event.subject.fx = null;
-                    event.subject.fy = null;
+                function dragended() {
+                    if (!d3.event.active) simulation.alphaTarget(0);
+                    d3.event.subject.fx = null;
+                    d3.event.subject.fy = null;
                 }
 
                 return d3
@@ -173,9 +170,8 @@ export const Force: React.FC = () => {
     useEffect(() => {
         const { clientWidth } = containerRef.current as HTMLDivElement;
 
-        const SCALE = 4 / 3;
+        const SCALE = 3 / 4;
         const clientHeight = clientWidth * SCALE;
-        console.log(clientWidth, clientHeight);
         setBox({ width: clientWidth, height: clientHeight });
     }, []);
     useEffect(() => {
