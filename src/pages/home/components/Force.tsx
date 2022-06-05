@@ -1,21 +1,81 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { request } from '../../../utils/request/request';
 import * as d3 from 'd3';
-import { Selection, BaseType } from 'd3';
+import {
+  Selection,
+  BaseType,
+  SimulationNodeDatum,
+  Simulation,
+  SimulationLinkDatum,
+  ForceManyBody,
+  ForceLink,
+} from 'd3';
+import { Button } from 'antd';
+
+const linkTypes = [
+  'r_cert',
+  'r_subdomain',
+  'r_request_jump',
+  'r_dns_a',
+  'r_whois_name',
+  'r_whois_email',
+  'r_whois_phone',
+  'r_cert_chain',
+  'r_cname',
+  'r_asn',
+  'r_cidr',
+];
+
+const nodeTypes = ['Domain', 'IP', 'Cert', 'Whois_Name', 'Whois_Phone', 'Whois_Email', 'IP_C', 'ASN'];
+
+interface INode extends SimulationNodeDatum {
+  id: string;
+  originData: any;
+}
+
+interface ILink extends SimulationLinkDatum<INode> {
+  originData: any;
+}
 
 export const Force: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const svg = useRef<Selection<BaseType, any, any, any> | null>();
 
+  const simulation = useRef<Simulation<any, any> | null>(null);
+
+  const forceNode = useRef<ForceManyBody<INode>>();
+
+  const forceLink = useRef<ForceLink<INode, ILink>>();
+
   const [box, setBox] = useState({ width: 0, height: 0 });
 
-  const init = useCallback(() => {
+  const [nodes, setNodes] = useState<INode[]>([]);
+
+  const [links, setLinks] = useState<ILink[]>([]);
+
+  const init = useCallback((nodes: INode[], links: ILink[]) => {
     svg.current = d3.select(containerRef.current).select('svg');
+
+    const forceNode = d3.forceManyBody<INode>();
+    const forceLink = d3.forceLink<INode, ILink>(links).id((d) => d.id);
+
+    const simulation = d3
+      .forceSimulation(nodes)
+      .force('link', forceLink)
+      .force('charge', forceNode)
+      .force('x', d3.forceX())
+      .force('y', d3.forceY());
+
+    return { forceNode, forceLink, simulation };
   }, []);
 
   const initChart = useCallback(
-    (nodes: any[], links: any[]) => {
+    (nodes: INode[], links: ILink[]) => {
+      const colors = d3.schemeTableau10;
+
+      const linkColors = d3.schemePastel1;
+
       const linkStrokeWidth = 1.5;
       // node stroke fill (if not using a group color encoding)
       const nodeFill = 'currentColor';
@@ -28,67 +88,54 @@ export const Force: React.FC = () => {
       // node radius, in pixels
       const nodeRadius = 5;
 
-      // link stroke color
-      const linkStroke = '#999';
       // link stroke opacity
       const linkStrokeOpacity = 0.6;
       // link stroke linecap
       const linkStrokeLinecap = 'round';
 
-      const nodeStrength = null;
+      //   const nodeStrength = null;
 
-      const linkStrength = 1;
+      //   const linkStrength = 1;
 
-      const colors = d3.schemeTableau10;
+      // link stroke color
 
-      function nodeId(d: any) {
-        return d.id;
+      const nodeColorScale = d3.scaleOrdinal(nodeTypes, colors);
+
+      function linkStroke(d: any): any {
+        return d3.scaleOrdinal().domain(linkTypes).range(linkColors)(d.type);
       }
 
-      function intern(value: any) {
-        return value !== null && typeof value === 'object' ? value.valueOf() : value;
-      }
+      //   function nodeId(d: any) {
+      //     return d.id;
+      //   }
 
-      const linkSource = ({ source }: any) => source;
-      const linkTarget = ({ target }: any) => target;
+      //   function intern(value: any) {
+      //     return value !== null && typeof value === 'object' ? value.valueOf() : value;
+      //   }
 
-      const nodeTitle = (d: any) => `${d.id} (${d.group})`;
+      //   const linkSource = ({ startId: source }: any) => source;
+      //   const linkTarget = ({ endId: target }: any) => target;
 
-      const nodeGroup = (d: any) => d.group;
+      //   const nodeTitle = (d: any) => `${d.id} (${d.group})`;
 
-      let nodeGroups: any;
+      //   const nodeGroup = (d: any) => d.group;
 
-      const N = nodes.map(nodeId).map(intern);
-      const LS = links.map(linkSource).map(intern);
-      const LT = links.map(linkTarget).map(intern);
+      //   let nodeGroups: any;
+
+      //   const N = nodes.map(nodeId).map(intern);
+      //   const LS = links.map(linkSource).map(intern);
+      //   const LT = links.map(linkTarget).map(intern);
       // if (nodeTitle === undefined) nodeTitle = (_, i) => N[i];
-      const T = nodeTitle == null ? null : nodes.map(nodeTitle);
-      const G = nodeGroup == null ? null : nodes.map(nodeGroup).map(intern);
-      const W = typeof linkStrokeWidth !== 'function' ? null : links.map(linkStrokeWidth);
-
-      // Replace the input nodes and links with mutable objects for the simulation.
-      nodes = nodes.map((_, i) => ({ id: N[i] }));
-      links = links.map((_, i) => ({ source: LS[i], target: LT[i] }));
+      //   const T = nodeTitle == null ? null : nodes.map(nodeTitle);
+      //   const G = nodeGroup == null ? null : nodes.map(nodeGroup).map(intern);
+      //   const W = typeof linkStrokeWidth !== 'function' ? null : links.map(linkStrokeWidth);
 
       // Compute default domains.
-      if (G) nodeGroups = G.sort();
+      //   if (G) nodeGroups = G.sort();
 
       // Construct the scales.
-      const color = nodeGroup == null ? (d: any) => d : d3.scaleOrdinal(nodeGroups, colors);
 
-      // Construct the forces.
-      const forceNode = d3.forceManyBody();
-      const forceLink = d3.forceLink(links).id(({ index: i }) => N[i as any]);
-      if (nodeStrength !== null) forceNode.strength(nodeStrength);
-      if (linkStrength !== null) forceLink.strength(linkStrength);
-
-      const simulation = d3
-        .forceSimulation(nodes)
-        .force('link', forceLink)
-        .force('charge', forceNode)
-        .force('x', d3.forceX())
-        .force('y', d3.forceY())
-        .on('tick', ticked);
+      simulation.current?.on('tick', ticked);
 
       const { width, height } = box;
 
@@ -100,15 +147,17 @@ export const Force: React.FC = () => {
 
       const link = globalG
         ?.append('g')
-        .attr('stroke', linkStroke)
+        .attr('stroke', '#999')
         .attr('stroke-opacity', linkStrokeOpacity)
-        .attr('stroke-width', typeof linkStrokeWidth !== 'function' ? linkStrokeWidth : '')
+        .attr('stroke-width', linkStrokeWidth)
         .attr('stroke-linecap', linkStrokeLinecap)
         .selectAll('line')
         .data(links)
         .join('line');
 
-      if (W) link?.attr('stroke-width', ({ index: i }: any): any => W[i]);
+      link?.attr('stroke', linkStroke);
+
+      link?.attr('title', (d) => d.originData.type);
 
       const node = globalG
         ?.append('g')
@@ -120,27 +169,27 @@ export const Force: React.FC = () => {
         .data(nodes)
         .join('circle')
         .attr('r', nodeRadius)
-        .call(drag(simulation) as any);
+        .call(drag() as any);
 
-      if (G) node?.attr('fill', ({ index: i }) => color(G[i] || ''));
-      if (T) node?.append('title').text(({ index: i }) => T[i]);
+      node?.attr('fill', (d) => nodeColorScale(d.originData.label));
+      node?.append('title').text((d) => d.originData.name);
 
       // Handle invalidation.
       // if (invalidation != null) invalidation.then(() => simulation.stop());
 
       function ticked() {
         link
-          ?.attr('x1', (d) => d.source.x)
-          .attr('y1', (d) => d.source.y)
-          .attr('x2', (d) => d.target.x)
-          .attr('y2', (d) => d.target.y);
+          ?.attr('x1', (d) => (d.source as INode).x || '')
+          .attr('y1', (d) => (d.source as INode)?.y || '')
+          .attr('x2', (d) => (d.target as INode)?.x || '')
+          .attr('y2', (d) => (d.target as INode)?.y || '');
 
-        node?.attr('cx', (d) => d.x).attr('cy', (d) => d.y);
+        node?.attr('cx', (d) => d.x || '').attr('cy', (d) => d.y || '');
       }
 
-      function drag(simulation: any) {
+      function drag() {
         function dragstarted() {
-          if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+          if (!d3.event.active) simulation.current?.alphaTarget(0.3).restart();
           d3.event.subject.fx = d3.event.subject.x;
           d3.event.subject.fy = d3.event.subject.y;
         }
@@ -151,7 +200,7 @@ export const Force: React.FC = () => {
         }
 
         function dragended() {
-          if (!d3.event.active) simulation.alphaTarget(0);
+          if (!d3.event.active) simulation.current?.alphaTarget(0);
           d3.event.subject.fx = null;
           d3.event.subject.fy = null;
         }
@@ -172,20 +221,45 @@ export const Force: React.FC = () => {
 
   useEffect(() => {
     if (box.width) {
-      request('/mock/test-force.json').then((res) => {
-        const { nodes, links } = res.data;
-        console.log(box.width);
+      request('/mock/community_1.json').then((res) => {
+        const { nodes, relations: links } = res.data;
 
         if (box.width) {
-          init();
-          initChart(nodes, links);
+          const useNodes: INode[] = nodes.map((_: any) => ({ id: _.id, originData: _ }));
+          const useLinks: ILink[] = links.map((d: any) => ({
+            source: d.startId,
+            target: d.endId,
+            originData: d,
+          }));
+
+          const forceAbout = init(useNodes, useLinks);
+
+          simulation.current = forceAbout.simulation;
+          forceLink.current = forceAbout.forceLink;
+          forceNode.current = forceAbout.forceNode;
+
+          initChart(useNodes, useLinks);
+
+          setNodes(useNodes);
+          setLinks(useLinks);
         }
       });
     }
   }, [box]);
 
+  function handleClick() {
+    simulation.current?.stop();
+    forceNode.current?.strength((forceNode.current?.strength as unknown as number) - 1);
+    simulation.current?.restart();
+  }
+
   return (
-    <div ref={containerRef} className="w-full">
+    <div ref={containerRef} className="w-full relative">
+      <div className="absolute">
+        <Button type="primary" onClick={handleClick}>
+          -1
+        </Button>
+      </div>
       <svg width={`${box.width}px`} height={`${box.height}px`} viewBox={`0 0 ${box.width} ${box.height}`}></svg>
     </div>
   );
