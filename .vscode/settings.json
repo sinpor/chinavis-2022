@@ -1,4 +1,10 @@
 {
     "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "modificationsIfAvailable"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true,
+      "source.fixAll.stylelint": true
+    },
+    // "editor.formatOnSaveMode": "modificationsIfAvailable",
+    "windicss.sortOnSave": true
 }
