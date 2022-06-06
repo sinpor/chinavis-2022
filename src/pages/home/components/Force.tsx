@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { request } from "../../../utils/request/request";
+import { eventBus } from "../../../utils/bus/bus";
 import * as d3 from "d3";
 
 export const Force: React.FC = () => {
@@ -166,7 +167,14 @@ export const Force: React.FC = () => {
         },
         [box]
     );
-
+    const reqComId = (num: any) => {
+        console.log(num)
+    }
+    const SearchId = (value: string) => {
+        console.log("Force--", value)
+    }
+    eventBus.addListener("ComId", reqComId)
+    eventBus.addListener("clue", SearchId)
     useEffect(() => {
         const { clientWidth } = containerRef.current as HTMLDivElement;
 
@@ -176,7 +184,7 @@ export const Force: React.FC = () => {
     }, []);
     useEffect(() => {
         request("/mock/test-force.json").then((res) => {
-            console.log(res);
+            //console.log(res);
             const { nodes, links } = res.data;
             if (box.width) {
                 initChart(nodes, links);
