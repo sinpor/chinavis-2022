@@ -10,7 +10,7 @@ import {
   ForceManyBody,
   ForceLink,
 } from 'd3';
-import { Button } from 'antd';
+import { Slider } from 'antd';
 
 const linkTypes = [
   'r_cert',
@@ -54,6 +54,8 @@ export const Force: React.FC = () => {
 
   const [links, setLinks] = useState<ILink[]>([]);
 
+  const [nodeStrength, setNodeStrength] = useState(-5);
+
   const init = useCallback((nodes: INode[], links: ILink[]) => {
     svg.current = d3.select(containerRef.current).select('svg');
 
@@ -65,7 +67,9 @@ export const Force: React.FC = () => {
       .force('link', forceLink)
       .force('charge', forceNode)
       .force('x', d3.forceX())
-      .force('y', d3.forceY());
+      .force('y', d3.forceY())
+      .alphaDecay(0.01);
+    //   .velocityDecay(0.3);
 
     return { forceNode, forceLink, simulation };
   }, []);
@@ -76,22 +80,22 @@ export const Force: React.FC = () => {
 
       const linkColors = d3.schemePastel1;
 
-      const linkStrokeWidth = 1.5;
-      // node stroke fill (if not using a group color encoding)
-      const nodeFill = 'currentColor';
-      // node stroke color
-      const nodeStroke = '#fff';
-      // node stroke width, in pixels
-      const nodeStrokeWidth = 1.5;
-      // node stroke opacity
-      const nodeStrokeOpacity = 1;
-      // node radius, in pixels
-      const nodeRadius = 5;
+      //   const linkStrokeWidth = 1.5;
+      //   // node stroke fill (if not using a group color encoding)
+      //   const nodeFill = 'currentColor';
+      //   // node stroke color
+      //   const nodeStroke = '#fff';
+      //   // node stroke width, in pixels
+      //   const nodeStrokeWidth = 1.5;
+      //   // node stroke opacity
+      //   const nodeStrokeOpacity = 1;
+      //   // node radius, in pixels
+      //   const nodeRadius = 5;
 
-      // link stroke opacity
-      const linkStrokeOpacity = 0.6;
-      // link stroke linecap
-      const linkStrokeLinecap = 'round';
+      //   // link stroke opacity
+      //   const linkStrokeOpacity = 0.6;
+      //   // link stroke linecap
+      //   const linkStrokeLinecap = 'round';
 
       //   const nodeStrength = null;
 
@@ -101,39 +105,7 @@ export const Force: React.FC = () => {
 
       const nodeColorScale = d3.scaleOrdinal(nodeTypes, colors);
 
-      function linkStroke(d: any): any {
-        return d3.scaleOrdinal().domain(linkTypes).range(linkColors)(d.type);
-      }
-
-      //   function nodeId(d: any) {
-      //     return d.id;
-      //   }
-
-      //   function intern(value: any) {
-      //     return value !== null && typeof value === 'object' ? value.valueOf() : value;
-      //   }
-
-      //   const linkSource = ({ startId: source }: any) => source;
-      //   const linkTarget = ({ endId: target }: any) => target;
-
-      //   const nodeTitle = (d: any) => `${d.id} (${d.group})`;
-
-      //   const nodeGroup = (d: any) => d.group;
-
-      //   let nodeGroups: any;
-
-      //   const N = nodes.map(nodeId).map(intern);
-      //   const LS = links.map(linkSource).map(intern);
-      //   const LT = links.map(linkTarget).map(intern);
-      // if (nodeTitle === undefined) nodeTitle = (_, i) => N[i];
-      //   const T = nodeTitle == null ? null : nodes.map(nodeTitle);
-      //   const G = nodeGroup == null ? null : nodes.map(nodeGroup).map(intern);
-      //   const W = typeof linkStrokeWidth !== 'function' ? null : links.map(linkStrokeWidth);
-
-      // Compute default domains.
-      //   if (G) nodeGroups = G.sort();
-
-      // Construct the scales.
+      const linkColorScale = d3.scaleOrdinal(linkTypes, linkColors);
 
       simulation.current?.on('tick', ticked);
 
@@ -145,67 +117,89 @@ export const Force: React.FC = () => {
 
       const globalG = svg.current?.append('g').attr('transform', `translate(${width / 2}, ${height / 2})`);
 
-      const link = globalG
-        ?.append('g')
-        .attr('stroke', '#999')
-        .attr('stroke-opacity', linkStrokeOpacity)
-        .attr('stroke-width', linkStrokeWidth)
-        .attr('stroke-linecap', linkStrokeLinecap)
-        .selectAll('line')
-        .data(links)
-        .join('line');
+      const dragRect = globalG
+        ?.append('rect')
+        .attr('x', -width / 2)
+        .attr('y', -height / 2)
+        .attr('width', width)
+        .attr('height', height)
+        .attr('fill', 'transparent');
 
-      link?.attr('stroke', linkStroke);
+      const canvas = containerRef.current?.querySelector('canvas');
+      const context = canvas?.getContext('2d');
+      (canvas as HTMLCanvasElement).width = width;
+      (canvas as HTMLCanvasElement).height = height;
 
-      link?.attr('title', (d) => d.originData.type);
+      //   const width = canvas.width;
+      //   const height = canvas.height;
 
-      const node = globalG
-        ?.append('g')
-        .attr('fill', nodeFill)
-        .attr('stroke', nodeStroke)
-        .attr('stroke-opacity', nodeStrokeOpacity)
-        .attr('stroke-width', nodeStrokeWidth)
-        .selectAll('circle')
-        .data(nodes)
-        .join('circle')
-        .attr('r', nodeRadius)
-        .call(drag() as any);
-
-      node?.attr('fill', (d) => nodeColorScale(d.originData.label));
-      node?.append('title').text((d) => d.originData.name);
-
-      // Handle invalidation.
-      // if (invalidation != null) invalidation.then(() => simulation.stop());
+      dragRect?.call(
+        d3
+          .drag()
+          //   .container(dragRect?.node() as SVGRectElement)
+          .subject(dragsubject)
+          .on('start', dragstarted)
+          .on('drag', dragged)
+          .on('end', dragended) as any
+      );
 
       function ticked() {
-        link
-          ?.attr('x1', (d) => (d.source as INode).x || '')
-          .attr('y1', (d) => (d.source as INode)?.y || '')
-          .attr('x2', (d) => (d.target as INode)?.x || '')
-          .attr('y2', (d) => (d.target as INode)?.y || '');
+        // link
+        //   ?.attr('x1', (d) => (d.source as INode).x || '')
+        //   .attr('y1', (d) => (d.source as INode)?.y || '')
+        //   .attr('x2', (d) => (d.target as INode)?.x || '')
+        //   .attr('y2', (d) => (d.target as INode)?.y || '');
 
-        node?.attr('cx', (d) => d.x || '').attr('cy', (d) => d.y || '');
+        // node?.attr('cx', (d) => d.x || '').attr('cy', (d) => d.y || '');
+        context?.clearRect(0, 0, width, height);
+        context?.save();
+        context?.translate(width / 2, height / 2);
+
+        links.forEach(drawLink);
+        nodes.forEach(drawNode);
+
+        context?.restore();
       }
 
-      function drag() {
-        function dragstarted() {
-          if (!d3.event.active) simulation.current?.alphaTarget(0.3).restart();
-          d3.event.subject.fx = d3.event.subject.x;
-          d3.event.subject.fy = d3.event.subject.y;
-        }
+      function dragsubject() {
+        return simulation.current?.find(d3.event.x, d3.event.y);
+      }
 
-        function dragged() {
-          d3.event.subject.fx = d3.event.x;
-          d3.event.subject.fy = d3.event.y;
-        }
+      function dragstarted() {
+        if (!d3.event.active) simulation.current?.alphaTarget(0.3).restart();
+        d3.event.subject.fx = d3.event.subject.x;
+        d3.event.subject.fy = d3.event.subject.y;
+      }
 
-        function dragended() {
-          if (!d3.event.active) simulation.current?.alphaTarget(0);
-          d3.event.subject.fx = null;
-          d3.event.subject.fy = null;
-        }
+      function dragged() {
+        d3.event.subject.fx = d3.event.x;
+        d3.event.subject.fy = d3.event.y;
+      }
 
-        return d3.drag().on('start', dragstarted).on('drag', dragged).on('end', dragended);
+      function dragended() {
+        if (!d3.event.active) simulation.current?.alphaTarget(0);
+        d3.event.subject.fx = null;
+        d3.event.subject.fy = null;
+      }
+
+      function drawLink(d: ILink) {
+        context?.beginPath();
+        context?.save();
+        (context as CanvasRenderingContext2D).strokeStyle = linkColorScale(d.originData.type);
+        context?.moveTo((d.source as INode).x || 0, (d.source as INode).y || 0);
+        context?.lineTo((d.target as INode).x || 0, (d.target as INode).y || 0);
+        context?.stroke();
+        context?.restore();
+      }
+
+      function drawNode(d: INode) {
+        context?.beginPath();
+        context?.save();
+        (context as CanvasRenderingContext2D).fillStyle = nodeColorScale(d.originData.label);
+        context?.moveTo((d?.x || 0) + 3, d?.y || 0);
+        context?.arc(d?.x || 0, d?.y || 0, 3, 0, 2 * Math.PI);
+        context?.fill();
+        context?.restore();
       }
     },
     [box]
@@ -238,6 +232,8 @@ export const Force: React.FC = () => {
           forceLink.current = forceAbout.forceLink;
           forceNode.current = forceAbout.forceNode;
 
+          forceNode.current.strength(nodeStrength);
+
           initChart(useNodes, useLinks);
 
           setNodes(useNodes);
@@ -247,20 +243,26 @@ export const Force: React.FC = () => {
     }
   }, [box]);
 
-  function handleClick() {
+  function handleChangeStrength(val: number) {
     simulation.current?.stop();
-    forceNode.current?.strength((forceNode.current?.strength as unknown as number) - 1);
-    simulation.current?.restart();
+    setNodeStrength(val);
+    forceNode.current?.strength(val);
+    simulation.current?.alphaTarget(0.5).restart();
   }
 
   return (
     <div ref={containerRef} className="w-full relative">
-      <div className="absolute">
-        <Button type="primary" onClick={handleClick}>
-          -1
-        </Button>
+      <div className="right-0 w-200px z-20 absolute">
+        <div className="text-gray-500">节点力</div>
+        <Slider min={-20} max={-2} value={nodeStrength} onChange={handleChangeStrength} />
       </div>
-      <svg width={`${box.width}px`} height={`${box.height}px`} viewBox={`0 0 ${box.width} ${box.height}`}></svg>
+      <canvas className="h-full w-full z-0 absolute" />
+      <svg
+        className="z-10 relative"
+        width={`${box.width}px`}
+        height={`${box.height}px`}
+        viewBox={`0 0 ${box.width} ${box.height}`}
+      ></svg>
     </div>
   );
 };
