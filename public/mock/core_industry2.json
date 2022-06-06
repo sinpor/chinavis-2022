@@ -1,0 +1,14 @@
+{
+	"nodeId": [
+		"IP_2bc5b78ec6d77335602be48eb70a11550ce7c799d4ca067bb6e1e1e394129bec",
+		"IP_2bc5b78ec6d77335602be48eb70a11550ce7c799d4ca067bb6e1e1e394129bff"
+
+	],
+	"series": [
+		{"name": "C", "data": [10, 20]},
+		{"name": "D", "data": [15, 15]},
+		{"name": "E", "data": [10, 20]},
+		{"name": "A", "data": [10, 20]},
+		{"name": "B", "data": [15, 10]}
+	]
+}
