@@ -11,6 +11,8 @@ import {
   ForceLink,
 } from 'd3';
 import { Slider } from 'antd';
+import { NodePopover } from './NodePopover';
+import { ILinkData, INodeData } from '../../../types';
 
 const linkTypes = [
   'r_cert',
@@ -30,12 +32,14 @@ const nodeTypes = ['Domain', 'IP', 'Cert', 'Whois_Name', 'Whois_Phone', 'Whois_E
 
 interface INode extends SimulationNodeDatum {
   id: string;
-  originData: any;
+  originData: INodeData;
 }
 
 interface ILink extends SimulationLinkDatum<INode> {
-  originData: any;
+  originData: ILinkData;
 }
+
+let timer = 0;
 
 export const Force: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,6 +59,13 @@ export const Force: React.FC = () => {
   const [links, setLinks] = useState<ILink[]>([]);
 
   const [nodeStrength, setNodeStrength] = useState(-5);
+
+  const [popoverData, setPopoverData] = useState<{ x: number; y: number; data: INodeData; show: boolean }>({
+    show: false,
+    x: 0,
+    y: 0,
+    data: {} as INodeData,
+  });
 
   const init = useCallback((nodes: INode[], links: ILink[]) => {
     svg.current = d3.select(containerRef.current).select('svg');
@@ -133,15 +144,37 @@ export const Force: React.FC = () => {
       //   const width = canvas.width;
       //   const height = canvas.height;
 
-      dragRect?.call(
-        d3
-          .drag()
-          //   .container(dragRect?.node() as SVGRectElement)
-          .subject(dragsubject)
-          .on('start', dragstarted)
-          .on('drag', dragged)
-          .on('end', dragended) as any
-      );
+      dragRect
+        ?.call(
+          d3
+            .drag()
+            //   .container(dragRect?.node() as SVGRectElement)
+            .subject(dragsubject)
+            .on('start', dragstarted)
+            .on('drag', dragged)
+            .on('end', dragended) as any
+        )
+        .on('mousemove', () => {
+          const { offsetX, offsetY } = d3.event;
+          const data = simulation.current?.find(offsetX - width / 2, offsetY - height / 2, 5);
+
+          if (!data) {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+              setPopoverData((prev) => {
+                return { ...prev, show: false };
+              });
+            }, 50);
+            return;
+          }
+
+          setPopoverData({
+            x: offsetX,
+            y: offsetY,
+            show: true,
+            data: data.originData,
+          });
+        });
 
       function ticked() {
         // link
@@ -161,7 +194,7 @@ export const Force: React.FC = () => {
         context?.restore();
       }
 
-      function dragsubject() {
+      function dragsubject(): INode {
         return simulation.current?.find(d3.event.x, d3.event.y);
       }
 
@@ -219,8 +252,11 @@ export const Force: React.FC = () => {
         const { nodes, relations: links } = res.data;
 
         if (box.width) {
-          const useNodes: INode[] = nodes.map((_: any) => ({ id: _.id, originData: _ }));
-          const useLinks: ILink[] = links.map((d: any) => ({
+          const useNodes: INode[] = nodes.map((_: INodeData) => ({
+            id: _.id,
+            originData: { ..._, industry: Array.isArray(_.industry) ? _.industry : JSON.parse(_.industry) },
+          }));
+          const useLinks: ILink[] = links.map((d: ILinkData) => ({
             source: d.startId,
             target: d.endId,
             originData: d,
@@ -250,8 +286,26 @@ export const Force: React.FC = () => {
     simulation.current?.alphaTarget(0.5).restart();
   }
 
+  function handleChangeShow(show: boolean) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      setPopoverData((prev) => {
+        return { ...prev, show };
+      });
+    }, 100);
+  }
+
   return (
     <div ref={containerRef} className="w-full relative">
+      {popoverData.show ? (
+        <NodePopover
+          x={popoverData.x}
+          y={popoverData.y}
+          nodeData={popoverData.data}
+          show={popoverData.show}
+          onChangeShow={handleChangeShow}
+        />
+      ) : null}
       <div className="right-0 w-200px z-20 absolute">
         <div className="text-gray-500">节点力</div>
         <Slider min={-20} max={-2} value={nodeStrength} onChange={handleChangeStrength} />
