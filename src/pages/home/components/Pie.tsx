@@ -35,7 +35,7 @@ export const Pie: React.FC = () => {
 
 	const containerRef = useRef<HTMLDivElement>(null);
 
-	const [nodes, setPieData] = useState([]);
+	const [nodes, setNodes] = useState([]);
 
 	const updatePie = useCallback(
 		(pie_data: any[]) => {
@@ -48,7 +48,8 @@ export const Pie: React.FC = () => {
 					}
 				]
 			});
-		}, []
+		}, 
+		[]
 	);
 
 	useEffect(() => {
@@ -114,15 +115,15 @@ export const Pie: React.FC = () => {
 
 		window.addEventListener('resize', pieChart.resize);
 
-		pieChart.on('mouseover', function(params) {
-			console.log(params.data.name);
-		});
-		pieChart.on('mouseout', function(params) {
-			console.log('leave');
-		});
+		// pieChart.on('mouseover', function(params) {
+		// 	console.log(params.data.name);
+		// });
+		// pieChart.on('mouseout', function(params) {
+		// 	console.log('leave');
+		// });
 
 		const updatePieData = (nodes_data) => {
-			setPieData(nodes_data);
+			setNodes(nodes_data);
 		};
 
 		eventBus.addListener("updatePieData", updatePieData);

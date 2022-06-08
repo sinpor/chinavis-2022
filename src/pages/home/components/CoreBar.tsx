@@ -1,92 +1,73 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { request } from "../../../utils/request/request";
-import { eventBus } from "../../../utils/bus/bus";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { request } from '../../../utils/request/request';
+import { eventBus } from '../../../utils/bus/bus';
 // import ReactEcharts from "echarts-for-react";
 import * as echarts from 'echarts/core';
-import {
-	TooltipComponent,
-	GridComponent,
-	LegendComponent,
-	DataZoomComponent
-} from 'echarts/components';
+import { TooltipComponent, GridComponent, LegendComponent, DataZoomComponent } from 'echarts/components';
 import { BarChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
 
-echarts.use([
-	TooltipComponent,
-	GridComponent,
-	LegendComponent,
-	DataZoomComponent,
-	BarChart,
-	CanvasRenderer
-]);
-
+echarts.use([TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, BarChart, CanvasRenderer]);
 
 export const CoreBar: React.FC = () => {
-
 	const industryName = {
-		'A': '涉黄',
-		'B': '涉赌',
-		'C': '诈骗',
-		'D': '涉毒',
-		'E': '涉枪',
-		'F': '黑客',
-		'G': '非法交易平台',
-		'H': '非法支付平台',
-		'I': '其他'
+		A: '涉黄',
+		B: '涉赌',
+		C: '诈骗',
+		D: '涉毒',
+		E: '涉枪',
+		F: '黑客',
+		G: '非法交易',
+		H: '非法支付',
+		I: '其他',
 	};
 
 	const containerRef = useRef<HTMLDivElement>(null);
 
-	let nodeId;
-	let series;
+	let barChart: echarts.ECharts;
 
-	let barChart;
+	const [nodes, setNodes] = useState([]);
 
-	const [coreBarData, setCoreBarData] = useState({
-		"nodeId": [],
-		"series": [],
-	});
+	const [links, setLinks] = useState([]);
 
-	const updateCoreBar = useCallback(
-		(nodeId: any[], series: any[]) => {
+	const updateCoreBar = useCallback((nodeIds: any[], series: any[]) => {
+		const data = [];
 
-			const data = [];
-
-			series.map(barData => {
-				data.push({
-					name: industryName[barData.name],
-					id: barData.name,
-					type: 'bar',
-					stack: 'total',
-					label: {
-						show: true,
-					},
-					emphasis: {
-						focus: 'series',
-					},
-					barMaxWidth: 30,
-					barMinWidth: 15,
-					// barCategoryGap: 20,
-					data: barData.data
-				});
+		series.map((barData) => {
+			data.push({
+				name: industryName[barData.name],
+				id: barData.name,
+				type: 'bar',
+				stack: 'total',
+				label: {
+					show: false,
+				},
+				emphasis: {
+					focus: 'series',
+				},
+				barMaxWidth: 30,
+				barMinWidth: 15,
+				// barCategoryGap: 20,
+				data: barData.data,
 			});
+		});
 
+		if (barChart) {
 			barChart.setOption({
 				series: data,
 				yAxis: {
-					data: nodeId
-				}
+					data: nodeIds,
+				},
 			});
-
 		}
-	);
+	}, []);
 
 	useEffect(() => {
 		barChart = echarts.init(containerRef.current, null, {
 			renderer: 'canvas',
-			useDirtyRect: false
+			useDirtyRect: false,
 		});
+
 		const option = {
 			backgroundColor: '#fff',
 			title: {
@@ -94,8 +75,8 @@ export const CoreBar: React.FC = () => {
 				left: 'center',
 				top: 10,
 				textStyle: {
-					color: '#333'
-				}
+					color: '#333',
+				},
 			},
 			dataZoom: [
 				{
@@ -120,7 +101,7 @@ export const CoreBar: React.FC = () => {
 					throttle: 10,
 					height: '70%',
 					top: '20%',
-					right: '2%'
+					right: '2%',
 				},
 				{
 					type: 'inside',
@@ -129,29 +110,29 @@ export const CoreBar: React.FC = () => {
 					orient: 'vertical',
 					filterMode: 'none',
 					zoomOnMouseWheel: 'ctrl',
-					moveOnMouseWheel: true
-				}
+					moveOnMouseWheel: true,
+				},
 			],
 
 			tooltip: {
 				trigger: 'axis',
 				axisPointer: {
-					type: 'shadow'
+					type: 'shadow',
 				},
 			},
 			legend: {
 				top: 40,
-				align: 'left'
+				align: 'left',
 			},
 			grid: {
 				left: '2%',
 				right: '9%',
 				top: 90,
 				bottom: 10,
-				containLabel: true
+				containLabel: true,
 			},
 			xAxis: {
-				type: 'value'
+				type: 'value',
 			},
 			yAxis: {
 				type: 'category',
@@ -160,50 +141,84 @@ export const CoreBar: React.FC = () => {
 				axisLabel: {
 					// show: false,
 					width: 50,
-					overflow: 'truncate'
-				}
+					overflow: 'truncate',
+				},
 			},
-			series: []
+			series: [],
 		};
 
 		if (option && typeof option === 'object') {
 			barChart.setOption(option);
 		}
 
-		window.addEventListener('resize', barChart.resize);
+		// window.addEventListener('resize', barChart.resize);
 
-		barChart.on('mouseover', function(params) {
-			console.log(params.name);
-			console.log(params.seriesId);
-		});
-		barChart.on('mouseout', function(params) {
-			console.log('leave');
-		});
+		// barChart.on('mouseover', function(params) {
+		// 	console.log(params.name);
+		// 	console.log(params.seriesId);
+		// });
+		// barChart.on('mouseout', function(params) {
+		// 	console.log('leave');
+		// });
 
-		const updateCoreBarData = (nodes_data) => {
-			setCoreBarData(nodes_data);
+		const updateCoreBarData = (nodes, links) => {
+			setLinks(links);
+			setNodes(nodes);
 		};
 
-		eventBus.addListener("updateCoreBarData", updateCoreBarData);
+		eventBus.addListener('updateCoreBarData', updateCoreBarData);
 
 		return () => {
 			barChart.off('mouseover');
 			barChart.off('mouseout');
-			eventBus.removeListener("updateCoreBarData", updateCoreBarData);
-		}
-	});
+			eventBus.removeListener('updateCoreBarData', updateCoreBarData);
+		};
+	}, []);
 
 	useEffect(() => {
-		nodeId = coreBarData.nodeId;
-		series = coreBarData.series.sort((a, b) => {
-			return a.name.charCodeAt() - b.name.charCodeAt();
-		});
-		updateCoreBar(nodeId, series);
+		const coreNodes = [];
+		const nodeIds = [];
+		const series = [
+			{ name: 'A', data: [] },
+			{ name: 'B', data: [] },
+			{ name: 'C', data: [] },
+			{ name: 'D', data: [] },
+			{ name: 'E', data: [] },
+			{ name: 'F', data: [] },
+			{ name: 'G', data: [] },
+			{ name: 'H', data: [] },
+			{ name: 'I', data: [] },
+		];
 
-	}, [coreBarData]);
+		for (const node of nodes) {
+			if (node.isCore) {
+				nodeIds.push(node.uid);
+				coreNodes.push({ id: node.id, linkNodeIds: [] });
+			}
+		}
 
-	return (
-		<div ref={containerRef} className="w-full h-50vh">
-		</div>
-	);
+		for (const coreNode of coreNodes) {
+			for (const link of links) {
+				if (link.endId === coreNode.id && (link.type === 'r_dns_a' || link.type === 'r_cert')) {
+					coreNode.linkNodeIds.push(link.startId);
+				}
+			}
+			for (const sery of series) {
+				sery.data.push(0);
+			}
+			for (const linkNodeId of coreNode.linkNodeIds) {
+				const node = nodes.find((node) => node.id === linkNodeId);
+				const industries = eval(node.industry);
+				if (industries) {
+					for (const industry of industries) {
+						const el = series[industry.charCodeAt() - 'A'.charCodeAt()];
+						el.data[el.data.length - 1]++;
+					}
+				}
+			}
+		}
+		updateCoreBar(nodeIds, series);
+	}, [nodes]);
+
+	return <div ref={containerRef} className="w-full h-50vh"></div>;
 };
