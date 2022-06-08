@@ -15,9 +15,9 @@ const httpRequest = (req, url, params) => {
 				params: params,
 			}).then(response => {
 				console.log("GET操作完成");
-				console.log(response.data);
 				// console.log(response.data);
 				eventBus.emit(url, response.data);
+				// return response.data;
 			});
 			break;
 

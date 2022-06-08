@@ -156,31 +156,57 @@ export const Controls: React.FC = () => {
 
 	const [communityList, setCommunityList] = useState([]);
 
-	const [curCommunity, setCurCommunity] = useState(1);
+	const [curCommunity, setCurCommunity] = useState(2);
 
 	const [selectedNodes, setSelectedNodes] = useState([101]);
 
-	const [nodes, setNodes] = useState([[]]);
+	const [nodes, setNodes] = useState([123]);
 
-	const [links, setLinks] = useState([[]]);
+	const [links, setLinks] = useState([123]);
 
+	let tempcommunityList;
+	let tempcurCommunity;
+	let tempselectedNodes;
+	let tempnodes;
+	let templinks;
 
 	// 初始化数据（回调）
 	const initData = (data) => {
 		setCommunityList(data.communitiesInfo);
 		setCurCommunity(data.curCommunity);
-		setNodes([data.nodes]);
-		setLinks([data.links]);
+		setNodes(data.nodes);
+		setLinks(data.links);
+
+		tempcommunityList = data.communitiesInfo;
+		tempcurCommunity = data.curCommunity;
+		tempnodes = data.nodes;
+		templinks = data.links;
 	}
 
 	// 搜索节点（回调）
 	const searchNode = (data) => {
-		if (data && curCommunity !== data.curCommunity) {
+		if (data && tempcurCommunity !== data.curCommunity) {
 			setCurCommunity(data.curCommunity);
-			setNodes([data.nodes]);
-			setLinks([data.links]);
-			setSelectedNodes([]);
+			setNodes(data.nodes);
+			setLinks(data.links);
+
+			tempcurCommunity = data.curCommunity;
+			tempnodes = data.nodes;
+			templinks = data.links;
+
+			// setSelectedNodes([]);
 		}
+	}
+
+	// 选择社区（回调）
+	const selectCommunity = (data) => {
+		setNodes(data.nodes);
+		setLinks(data.links);
+
+		tempnodes = data.nodes;
+		templinks = data.links;
+		
+		console.log(tempnodes, templinks);
 	}
 
 	// 扩张节点（按钮)
@@ -190,25 +216,20 @@ export const Controls: React.FC = () => {
 			return;
 		}
 		const nodeId = selectedNodes[0];
-		const node = nodes[0].find(node => node.id === nodeId);
+		const node = nodes.find(node => node.id === nodeId);
 		const label = node.label;
-		
-		console.log("获取前1", nodes[0])
 		httpExpandNode({ node: nodeId, label: label });
-		console.log("获取前2", nodes[0])
 	}
-	
-	
 
 	// 扩张节点（回调）
 	const expandNodeData = (data) => {
-		console.log("获取后", nodes[0]);
-		console.log(curCommunity);
-		// setNodes([nodes[0].concat(data.nodes)]);
-		// setLinks([links[0].concat(data.links)]);
+		setNodes(tempnodes.concat(data.nodes));
+		setLinks(templinks.concat(data.links));
+		tempnodes = tempnodes.concat(data.nodes);
+		templinks = templinks.concat(data.links);
+		console.log(tempnodes);
 		// setSelectedNodes([]);
 	}
-	
 
 	// 移除节点（按钮）
 	const removeNodesBtn = () => {
@@ -218,12 +239,12 @@ export const Controls: React.FC = () => {
 		}
 		const nodeList = [];
 		const linklist = [];
-		for (const node of nodes[0]) {
+		for (const node of nodes) {
 			if (!selectedNodes.includes(node.id)) {
 				nodeList.push(node)
 			}
 		}
-		for (const link of links[0]) {
+		for (const link of links) {
 			if (!(selectedNodes.includes(link.startId) &&
 				selectedNodes.includes(link.endId))) {
 				linklist
@@ -232,6 +253,8 @@ export const Controls: React.FC = () => {
 		httpRemoveNodes({ node: selectedNodes })
 		setNodes(nodeList);
 		setLinks(linklist);
+		tempnodes = nodeList;
+		templinks = linklist;
 		setSelectedNodes([]);
 	}
 
@@ -243,7 +266,7 @@ export const Controls: React.FC = () => {
 		}
 		const coreNodes = [];
 		for (const nodeId of selectedNodes) {
-			const node = nodes[0].find((node) => node.id === nodeId);
+			const node = nodes.find((node) => node.id === nodeId);
 			if ((node.label === 'IP' || node.label === 'Cert') &&
 				node.isCore === false) {
 				node.isCore = true;
@@ -256,7 +279,8 @@ export const Controls: React.FC = () => {
 		}
 		httpSetCore({ nodes: coreNodes, isCore: true });
 		// nodes.push({id:1145141919810});
-		setNodes([nodes[0]]);
+		setNodes([...nodes]);
+		tempnodes = [...nodes];
 	};
 
 	// 移除资产标记（按钮）
@@ -267,7 +291,7 @@ export const Controls: React.FC = () => {
 		}
 		const coreNodes = [];
 		for (const nodeId of selectedNodes) {
-			const node = nodes[0].find((node) => node.id === nodeId);
+			const node = nodes.find((node) => node.id === nodeId);
 			if ((node.label === 'IP' || node.label === 'Cert') &&
 				node.isCore === true) {
 				node.isCore = false;
@@ -279,12 +303,13 @@ export const Controls: React.FC = () => {
 			return;
 		}
 		httpSetCore({ nodes: coreNodes, isCore: false });
-		setNodes([nodes[0]]);
+		setNodes([...nodes]);
+		tempnodes = [...nodes];
 	};
 
 	// 保存视图（按钮）
 	const saveViewBtn = () => {
-		for (const node of nodes[0]) {
+		for (const node of nodes) {
 			// TODO: 修改node
 			node.community = curCommunity;
 		}
@@ -294,6 +319,7 @@ export const Controls: React.FC = () => {
 	// 保存视图（回调）
 	const saveView = (data) => {
 		setCommunityList(data.communitiesInfo);
+		tempcommunityList = data.communitiesInfo;
 	}
 
 	// 重置社区（按钮）
@@ -303,11 +329,13 @@ export const Controls: React.FC = () => {
 
 	// 重置社区（回调）
 	const resetCommunityData = (data) => {
-		setNodes([data.nodes]);
-		setLinks([data.links]);
+		setNodes(data.nodes);
+		setLinks(data.links);
+		tempnodes = data.nodes;
+		templinks = data.links;
 	};
 
-	// 重置所有节点（按钮）
+	// 重置所有数据（按钮）
 	const resetAllBtn = () => {
 		httpResetAll();
 	}
@@ -317,12 +345,14 @@ export const Controls: React.FC = () => {
 	useEffect(() => {
 		eventBus.addListener('init', initData);
 		eventBus.addListener('searchNode', searchNode);
+		eventBus.addListener('selectCommunity', selectCommunity);
 		eventBus.addListener('expandNode', expandNodeData);
 		eventBus.addListener('reset', resetCommunityData);
 		eventBus.addListener('resetAll', initData);
 		return () => {
 			eventBus.removeListener('init', initData);
 			eventBus.removeListener('searchNode', searchNode);
+			eventBus.removeListener('selectCommunity', selectCommunity);
 			eventBus.removeListener('expandNode', expandNodeData);
 			eventBus.removeListener('reset', resetCommunityData);
 			eventBus.removeListener('resetAll', initData);
@@ -332,13 +362,13 @@ export const Controls: React.FC = () => {
 
 	// 数据监听（饼图、柱状图节点属性修改）
 	useEffect(() => {
-		eventBus.emit('updatePieData', nodes[0]);
-		eventBus.emit('updateCoreBarData', coreBarData(nodes[0], links[0]));
+		eventBus.emit('updatePieData', nodes);
+		eventBus.emit('updateCoreBarData', coreBarData(nodes, links));
 	}, [nodes]);
 
 	// 数据监听（力导向图数据修改
 	useEffect(() => {
-		eventBus.emit('updateForceData', nodes[0], links[0]);
+		eventBus.emit('updateForceData', nodes, links);
 	}, [links]);
 
 	// 数据监听（社区列表修改）
@@ -376,7 +406,7 @@ export const Controls: React.FC = () => {
 			<button onClick={removeCoreBtn} className="w-100px border h-30px">资产移除</button>
 			<button onClick={saveViewBtn} className="w-100px border h-30px">保存视图</button>
 			<button onClick={resetCommunityBtn} className="w-100px border h-30px">重置社区</button>
-			<button onClick={resetAllBtn} className="w-100px border h-30px">重置所有节点</button>
+			<button onClick={resetAllBtn} className="w-100px border h-30px">重置所有数据</button>
 		</div>
 	);
 };

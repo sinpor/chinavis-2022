@@ -142,7 +142,8 @@ export const List: React.FC = () => {
 
 	const onChartClick = (param: any, echarts: any) => {
 		let num = param.name.split(" ")[1];
-		eventBus.emit("ComId", num);
+		// eventBus.emit("ComId", num);
+		httpSelectCommunity({ community: num })
 	}
 
 	const getClick = {
