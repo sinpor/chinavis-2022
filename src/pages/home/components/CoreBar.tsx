@@ -174,7 +174,7 @@ export const CoreBar: React.FC = () => {
 			barChart.setOption(option);
 		}
 
-		// window.addEventListener('resize', barChart.resize);
+		window.addEventListener('resize', barChart.resize);
 
 		// barChart.on('mouseover', function(params) {
 		// 	console.log(params.name);

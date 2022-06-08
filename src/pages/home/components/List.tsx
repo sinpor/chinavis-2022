@@ -1,22 +1,54 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import ReactEcharts from 'echarts-for-react';
 import { request } from "../../../utils/request/request";
 import { eventBus } from "../../../utils/bus/bus";
 import { httpSelectCommunity } from "../../../utils/request/httpRequest";
 
+import * as echarts from 'echarts/core';
+import { TooltipComponent, GridComponent, LegendComponent, DataZoomComponent } from 'echarts/components';
+import { BarChart } from 'echarts/charts';
+import { CanvasRenderer } from 'echarts/renderers';
+
+echarts.use([TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, BarChart, CanvasRenderer]);
+
 
 export const List: React.FC = () => {
 
-	const [communityData, setCommunityData] = useState({
-		// Cname: [],
-		// allCom: [],
-		// crimeCom: []
-	});
+	const containerRef = useRef<HTMLDivElement>(null);
+
+	const [communityData, setCommunityData] = useState({});
 
 	const [communityList, setCommunityList] = useState([]);
 
-	const getOption = () => {
-		let option = {
+	// const [curCommunity, setCurCommunity] = useState(1);
+
+	let comBarChart: echarts.ECharts;
+
+	let curCommunity = 1;
+
+	let tempcommunityList;
+
+	const updateComBar = useCallback((Cname, allCom, crimeCom) => {
+		comBarChart.setOption({
+			yAxis: {
+				data: Cname,
+			},
+			series: [
+				{ data: crimeCom },
+				{ data: allCom },
+			]
+		});
+	}, []);
+
+
+
+	useEffect(() => {
+		comBarChart = echarts.init(containerRef.current, null, {
+			renderer: 'canvas',
+			useDirtyRect: false,
+		});
+
+		const option = {
 			tooltip: {
 				trigger: 'axis',
 				axisPointer: {
@@ -95,7 +127,6 @@ export const List: React.FC = () => {
 				{
 					type: 'bar',
 					barWidth: "20px",
-					// stack: 'total',
 					color: "#4376b7",
 					label: {
 						show: false
@@ -109,9 +140,9 @@ export const List: React.FC = () => {
 					data: communityData.crimeCom,
 				},
 				{
+					id: 'comchart',
 					type: 'bar',
 					barWidth: "20px",
-					// stack: 'total',
 					color: "#c0d7ef",
 					barGap: '-100%',
 					label: {
@@ -126,7 +157,6 @@ export const List: React.FC = () => {
 					selectedMode: 'single',
 					select: {
 						itemStyle: {
-							// color: '#FFB040',
 							borderColor: '#FF9500',
 							borderWidth: 2,
 							shadowColor: '#FF9500',
@@ -137,32 +167,83 @@ export const List: React.FC = () => {
 				}
 			]
 		};
-		return option;
-	};
 
-	const onChartClick = (param: any, echarts: any) => {
-		let num = param.name.split(" ")[1];
-		// eventBus.emit("ComId", num);
-		httpSelectCommunity({ community: num })
-	}
+		if (option && typeof option === 'object') {
+			comBarChart.setOption(option);
+		}
 
-	const getClick = {
-		'click': onChartClick
-	};
+		window.addEventListener('resize', comBarChart.resize);
 
-	const SearchId = (value: string) => {
-		console.log("list---", value);
-	}
+		// comBarChart.on('mouseover', function(params) {
+		// 	console.log(params.name);
+		// 	console.log(params.seriesId);
+		// });
+		// comBarChart.on('mouseout', function(params) {
+		// 	console.log('leave');
+		// });
+
+		const selectedBorder = () => {
+			console.log("当前社区 ", curCommunity);
+			console.log("当前图表 ", comBarChart._model.option.yAxis[0].data);
+			let targetCommunityId = tempcommunityList.findIndex((com) => com.community === curCommunity);
+			const zeroCommunityId = tempcommunityList.findIndex((com) => com.community === 0);
+			if (zeroCommunityId < targetCommunityId) {
+				targetCommunityId--;
+			}
+			comBarChart.dispatchAction({
+				type: 'select',
+				seriesId: 'comchart',
+				dataIndex: targetCommunityId
+			});
+			console.log("index ", targetCommunityId);
+			console.log("index ", targetCommunityId);
+		}
 
 
+		comBarChart.on('click', (params) => {
+			let num = params.name.split(" ")[1];
+			console.log("lastClick", curCommunity);
+			console.log("tempClick", num);
+			// eventBus.emit("ComId", num);
+			if (curCommunity !== num) {
+				httpSelectCommunity({ community: num })
+				curCommunity = num;
+				eventBus.emit("changeCurCom", curCommunity);
+				selectedBorder();
+			}
+			console.log("curCommunity", curCommunity);
+			console.log("tempcommunityList", tempcommunityList);
+		});
 
-	// 更新列表（回调）
-	const updateCommunityList = useCallback((communityList) => {
-		setCommunityList(communityList.sort((a, b) => b.nodeNum - a.nodeNum));
+		// 更新当前社区编号
+		const updateCurCommunity = (data) => {
+			console.log("data", data);
+			curCommunity = data;
+			console.log("curCommunity", curCommunity);
+			selectedBorder();
+		}
+
+		// 更新列表（回调）
+		const updateCommunityList = (communityList) => {
+			setCommunityList(communityList.sort((a, b) => b.nodeNum - a.nodeNum));
+			tempcommunityList = communityList.sort((a, b) => b.nodeNum - a.nodeNum);
+		}
+
+		eventBus.addListener('updateCurCommunity', updateCurCommunity);
+		eventBus.addListener('updateCommunityList', updateCommunityList);
+
+		return () => {
+			comBarChart.off('mouseover');
+			comBarChart.off('mouseout');
+			comBarChart.off('click');
+			eventBus.removeListener('updateCurCommunity', updateCurCommunity);
+			eventBus.removeListener('updateCommunityList', updateCommunityList);
+		};
+
 	}, []);
 
 	// 数据更新（回调）
-	const communityListData = useCallback((communityList) => {
+	const communityListData = (communityList) => {
 		const name = [];
 		const comNum = [];
 		const crimeNum = [];
@@ -178,7 +259,7 @@ export const List: React.FC = () => {
 			allCom: comNum,
 			crimeCom: crimeNum
 		});
-	}, []);
+	}
 
 	// 按节点数量排序
 	const sortNodeNumBtn = () => {
@@ -190,37 +271,42 @@ export const List: React.FC = () => {
 		communityListData(communityList.sort((a, b) => b.industryNum - a.industryNum));
 	}
 
-
-	// 初始化数据监听
-	useEffect(() => {
-		console.log('初始化监听器');
-		eventBus.addListener("clue", SearchId);
-		eventBus.addListener('updateCommunityList', updateCommunityList);
-		return () => {
-			eventBus.removeListener('updateCommunityList', updateCommunityList);
-			eventBus.removeListener("clue", SearchId);
-		}
-	}, []);
- 
 	// 监听数据修改
 	useEffect(() => {
-		// console.log('监听到数据更新');
-		// console.log(communityList);
 		communityListData(communityList);
 	}, [communityList])
 
+	useEffect(() => {
+		updateComBar(communityData.Cname, communityData.allCom, communityData.crimeCom);
+	}, [communityData]);
+
+	// useEffect(() => {
+	// 	selectedBorder(curCommunity, communityList);
+	// }, [curCommunity]);
+
 	return (
 		<div className="h-700px">
-			<div className="flex h-7%">
+			<div className="flex h-50px">
 				<button onClick={sortNodeNumBtn} className="w-1/2 border h-30px">按节点数量排序</button>
 				<button onClick={sortIndustryNumBtn} className="w-1/2 border h-30px">按黑产数量排序</button>
 			</div>
-			<ReactEcharts className='border'
-				style={{ height: '93%', width: '100%' }}
-				option={getOption()}
-				onEvents={getClick}
-			/>
+			<div ref={containerRef} className="w-full h-650px"></div>
 		</div>
-	)
+
+	);
+
+	// return (
+	// 	<div className="h-700px">
+	// 		<div className="flex h-7%">
+	// 			<button onClick={sortNodeNumBtn} className="w-1/2 border h-30px">按节点数量排序</button>
+	// 			<button onClick={sortIndustryNumBtn} className="w-1/2 border h-30px">按黑产数量排序</button>
+	// 		</div>
+	// 		<ReactEcharts className='border'
+	// 			style={{ height: '93%', width: '100%' }}
+	// 			option={getOption()}
+	// 			onEvents={getClick}
+	// 		/>
+	// 	</div>
+	// )
 
 };

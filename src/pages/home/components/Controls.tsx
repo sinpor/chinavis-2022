@@ -156,13 +156,13 @@ export const Controls: React.FC = () => {
 
 	const [communityList, setCommunityList] = useState([]);
 
-	const [curCommunity, setCurCommunity] = useState(2);
+	const [curCommunity, setCurCommunity] = useState(-1);
 
 	const [selectedNodes, setSelectedNodes] = useState([101]);
 
-	const [nodes, setNodes] = useState([123]);
+	const [nodes, setNodes] = useState([]);
 
-	const [links, setLinks] = useState([123]);
+	const [links, setLinks] = useState([]);
 
 	let tempcommunityList;
 	let tempcurCommunity;
@@ -185,6 +185,8 @@ export const Controls: React.FC = () => {
 
 	// 搜索节点（回调）
 	const searchNode = (data) => {
+		console.log(tempcurCommunity);
+		console.log(data);
 		if (data && tempcurCommunity !== data.curCommunity) {
 			setCurCommunity(data.curCommunity);
 			setNodes(data.nodes);
@@ -194,6 +196,7 @@ export const Controls: React.FC = () => {
 			tempnodes = data.nodes;
 			templinks = data.links;
 
+			console.log("社区", tempcurCommunity, tempnodes);
 			// setSelectedNodes([]);
 		}
 	}
@@ -205,8 +208,15 @@ export const Controls: React.FC = () => {
 
 		tempnodes = data.nodes;
 		templinks = data.links;
-		
-		console.log(tempnodes, templinks);
+
+		// console.log(tempnodes, templinks);
+	}
+
+	// 更改当前社区
+	const changeCurCom = (data) => {
+		console.log("ControlData", data);
+		setCurCommunity(data);
+		tempcurCommunity = data;
 	}
 
 	// 扩张节点（按钮)
@@ -223,11 +233,13 @@ export const Controls: React.FC = () => {
 
 	// 扩张节点（回调）
 	const expandNodeData = (data) => {
-		setNodes(tempnodes.concat(data.nodes));
-		setLinks(templinks.concat(data.links));
-		tempnodes = tempnodes.concat(data.nodes);
-		templinks = templinks.concat(data.links);
-		console.log(tempnodes);
+		if (data.nodes) {
+			setNodes(tempnodes.concat(data.nodes));
+			setLinks(templinks.concat(data.links));
+			tempnodes = tempnodes.concat(data.nodes);
+			templinks = templinks.concat(data.links);
+			console.log(tempnodes);
+		}
 		// setSelectedNodes([]);
 	}
 
@@ -310,7 +322,6 @@ export const Controls: React.FC = () => {
 	// 保存视图（按钮）
 	const saveViewBtn = () => {
 		for (const node of nodes) {
-			// TODO: 修改node
 			node.community = curCommunity;
 		}
 		httpSaveView({ communityId: curCommunity });
@@ -345,13 +356,16 @@ export const Controls: React.FC = () => {
 	useEffect(() => {
 		eventBus.addListener('init', initData);
 		eventBus.addListener('searchNode', searchNode);
+		eventBus.addListener('changeCurCom', changeCurCom);
 		eventBus.addListener('selectCommunity', selectCommunity);
 		eventBus.addListener('expandNode', expandNodeData);
 		eventBus.addListener('reset', resetCommunityData);
 		eventBus.addListener('resetAll', initData);
+
 		return () => {
 			eventBus.removeListener('init', initData);
 			eventBus.removeListener('searchNode', searchNode);
+			eventBus.removeListener('changeCurCom', changeCurCom);
 			eventBus.removeListener('selectCommunity', selectCommunity);
 			eventBus.removeListener('expandNode', expandNodeData);
 			eventBus.removeListener('reset', resetCommunityData);
@@ -380,16 +394,6 @@ export const Controls: React.FC = () => {
 	useEffect(() => {
 		eventBus.emit('updateCurCommunity', curCommunity);
 	}, [curCommunity]);
-	// const [test, setTest] = useState([1, 2]);
-
-	// const testbutton = () => {
-	// 	console.log(test);
-	// 	setTest(1);
-	// }
-
-	// useEffect(() => {
-	// 	console.log("1145141919810");
-	// }, [test]);
 
 
 	//			<button onClick={updatePieData} className="w-100px border h-30px">修改pie</button>
@@ -398,8 +402,7 @@ export const Controls: React.FC = () => {
 	//			<button onClick={testbutton} className="w-100px border h-30px">测试按钮</button>
 
 	return (
-		<div className="flex h-50px">
-
+		<div className="flex ">
 			<button onClick={expandNodeBtn} className="w-100px border h-30px">节点扩张</button>
 			<button onClick={removeNodesBtn} className="w-100px border h-30px">节点移除</button>
 			<button onClick={setCoreBtn} className="w-100px border h-30px">资产标记</button>

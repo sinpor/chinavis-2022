@@ -11,7 +11,7 @@ const { Search } = Input;
 // 搜索节点（按钮）
 const onSearch = (value: string) => {
 	httpSearchNode({ nodeUid: value });
-	eventBus.emit("clue", value);
+	// eventBus.emit("clue", value);
 };
 
 export const SearchId: React.FC = () => {
