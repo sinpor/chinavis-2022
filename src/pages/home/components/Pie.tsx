@@ -37,20 +37,17 @@ export const Pie: React.FC = () => {
 
 	const [nodes, setNodes] = useState([]);
 
-	const updatePie = useCallback(
-		(pie_data: any[]) => {
-			pieChart.setOption({
-				series: [
-					{
-						data: pie_data.sort((a, b) => {
-							return a.name.charCodeAt() - b.name.charCodeAt();
-						})
-					}
-				]
-			});
-		}, 
-		[]
-	);
+	const updatePie = useCallback((pie_data: any[]) => {
+		pieChart.setOption({
+			series: [
+				{
+					data: pie_data.sort((a, b) => {
+						return a.name.charCodeAt() - b.name.charCodeAt();
+					})
+				}
+			]
+		});
+	}, []);
 
 	useEffect(() => {
 
@@ -108,7 +105,7 @@ export const Pie: React.FC = () => {
 				}
 			}]
 		};
-		
+
 		if (option && typeof option === 'object') {
 			pieChart.setOption(option)
 		}

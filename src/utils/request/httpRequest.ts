@@ -1,11 +1,11 @@
 import axios from "axios";
 
-import {eventBus} from "../bus/bus";
+import { eventBus } from "../bus/bus";
 
 axios.defaults.baseURL = "http://10.170.47.171:5000/";
 
 const httpRequest = (req, url, params) => {
-	// console.log('start');
+	console.log('start');
 	switch (req) {
 		case "GET":
 			axios({
@@ -14,6 +14,8 @@ const httpRequest = (req, url, params) => {
 				headers: {},
 				params: params,
 			}).then(response => {
+				console.log("GET操作完成");
+				console.log(response.data);
 				// console.log(response.data);
 				eventBus.emit(url, response.data);
 			});
@@ -26,9 +28,12 @@ const httpRequest = (req, url, params) => {
 				headers: {},
 				data: params,
 			}).then(response => {
-				if (response.data.success) {
-					// setTimeout(alert('处理完成！'), 2000);
-				}
+				console.log("POST操作完成");
+				// if (response.data.success) {
+				// 	setTimeout(alert('处理完成！'), 2000);
+				// }
+			}).catch(error => {
+				console.log(error);
 			});
 			break;
 	}
@@ -38,33 +43,33 @@ const httpRequest = (req, url, params) => {
 // 初始化
 const httpInit = () => httpRequest('GET', 'init');
 
-// 选择社区
-// { communityId }
-const httpSelectCommunity = ( param ) => httpRequest('GET', 'selectCommunity', param);
-
 // 搜索节点
 // { nodeId }
-const httpSearchNode = ( param ) => httpRequest('GET', 'searchNode', param);
+const httpSearchNode = (param) => httpRequest('GET', 'searchNode', param);
+
+// 选择社区
+// { communityId }
+const httpSelectCommunity = (param) => httpRequest('GET', 'selectCommunity', param);
 
 // 节点扩张
 // { nodeId, nodeLabel }
-const httpExpandNode = ( param ) => httpRequest('GET', 'expandNode', param);
+const httpExpandNode = (param) => httpRequest('GET', 'expandNode', param);
 
 // 节点移除
 // { nodes: [] }
-const httpRemoveNodes = ( param ) => httpRequest('POST', 'removeNodes', param);
+const httpRemoveNodes = (param) => httpRequest('POST', 'removeNodes', param);
 
 // 资产标记
 // { nodes: [], isCore: boolean }
-const httpSetCore = ( params ) => httpRequest('POST', 'setCore', params);
+const httpSetCore = (params) => httpRequest('POST', 'setCore', params);
 
 // 保存视图
 // { communityId }
-const httpSaveView = ( param ) => httpRequest('GET', 'saveView', param);
+const httpSaveView = (param) => httpRequest('GET', 'saveView', param);
 
 // 重置社区
 // { communityId }
-const httpReset = ( param ) => httpRequest('GET', 'reset', param);
+const httpReset = (param) => httpRequest('GET', 'reset', param);
 
 // 全部重置
 const httpResetAll = () => httpRequest('GET', 'reset/all');

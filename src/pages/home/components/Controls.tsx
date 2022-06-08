@@ -5,8 +5,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
 	httpRequest,
 	httpInit,
-	httpSelectCommunity,
-	httpSearchNode,
 	httpExpandNode,
 	httpRemoveNodes,
 	httpSetCore,
@@ -17,6 +15,54 @@ import {
 
 import { eventBus } from "../../../utils/bus/bus";
 
+httpInit();
+
+// 核心资产数据处理
+const coreBarData = (nodes, links) => {
+	const coreNodes = [];
+	const nodeIds = [];
+	const series = [
+		{ name: 'A', data: [] },
+		{ name: 'B', data: [] },
+		{ name: 'C', data: [] },
+		{ name: 'D', data: [] },
+		{ name: 'E', data: [] },
+		{ name: 'F', data: [] },
+		{ name: 'G', data: [] },
+		{ name: 'H', data: [] },
+		{ name: 'I', data: [] },
+	];
+
+	for (const node of nodes) {
+		if (node.isCore) {
+			nodeIds.push(node.uid);
+			coreNodes.push({ id: node.id, linkNodeIds: [] });
+		}
+	}
+
+	for (const coreNode of coreNodes) {
+		for (const link of links) {
+			if (link.endId === coreNode.id && (link.type === 'r_dns_a' || link.type === 'r_cert')) {
+				coreNode.linkNodeIds.push(link.startId);
+			}
+		}
+		for (const sery of series) {
+			sery.data.push(0);
+		}
+		for (const linkNodeId of coreNode.linkNodeIds) {
+			const node = nodes.find((node) => node.id === linkNodeId);
+			const industries = eval(node.industry);
+			if (industries) {
+				for (const industry of industries) {
+					const el = series[industry.charCodeAt() - 'A'.charCodeAt()];
+					el.data[el.data.length - 1]++;
+				}
+			}
+		}
+	}
+	// console.log('更新核心资产', nodes, links);
+	return { nodeIds: nodeIds, series: series };
+}
 
 export const Controls: React.FC = () => {
 
@@ -118,17 +164,23 @@ export const Controls: React.FC = () => {
 
 	const [links, setLinks] = useState([[]]);
 
-	// const [test, setTest] = useState([[]]);
-
 
 	// 初始化数据（回调）
 	const initData = (data) => {
-		// console.log("初始化事件绑定回调");
 		setCommunityList(data.communitiesInfo);
 		setCurCommunity(data.curCommunity);
 		setNodes([data.nodes]);
 		setLinks([data.links]);
-		// console.log(data.nodes);
+	}
+
+	// 搜索节点（回调）
+	const searchNode = (data) => {
+		if (data && curCommunity !== data.curCommunity) {
+			setCurCommunity(data.curCommunity);
+			setNodes([data.nodes]);
+			setLinks([data.links]);
+			setSelectedNodes([]);
+		}
 	}
 
 	// 扩张节点（按钮)
@@ -138,30 +190,34 @@ export const Controls: React.FC = () => {
 			return;
 		}
 		const nodeId = selectedNodes[0];
-		const label = () => {
-			for (const node of nodes[0]) {
-				if (node.id === nodeId) {
-					return node.label;
-				}
-			}
-		}
+		const node = nodes[0].find(node => node.id === nodeId);
+		const label = node.label;
+		
+		console.log("获取前1", nodes[0])
 		httpExpandNode({ node: nodeId, label: label });
+		console.log("获取前2", nodes[0])
 	}
+	
+	
 
 	// 扩张节点（回调）
 	const expandNodeData = (data) => {
-		setNodes([nodes[0].concat(data.nodes)]);
-		setLinks([links[0].concat(data.links)]);
-		setSelectedNodes([]);
+		console.log("获取后", nodes[0]);
+		console.log(curCommunity);
+		// setNodes([nodes[0].concat(data.nodes)]);
+		// setLinks([links[0].concat(data.links)]);
+		// setSelectedNodes([]);
 	}
+	
 
 	// 移除节点（按钮）
 	const removeNodesBtn = () => {
-		const nodeList = [];
-		const linklist = [];
 		if (!selectedNodes) {
+			alert('尚未选择节点！');
 			return;
 		}
+		const nodeList = [];
+		const linklist = [];
 		for (const node of nodes[0]) {
 			if (!selectedNodes.includes(node.id)) {
 				nodeList.push(node)
@@ -181,6 +237,10 @@ export const Controls: React.FC = () => {
 
 	// 资产标记（按钮）
 	const setCoreBtn = () => {
+		if (!selectedNodes) {
+			alert('尚未选择节点！');
+			return;
+		}
 		const coreNodes = [];
 		for (const nodeId of selectedNodes) {
 			const node = nodes[0].find((node) => node.id === nodeId);
@@ -190,6 +250,10 @@ export const Controls: React.FC = () => {
 				coreNodes.push(nodeId);
 			}
 		}
+		if (!coreNodes) {
+			alert('请选择包含IP或Cert的节点！');
+			return;
+		}
 		httpSetCore({ nodes: coreNodes, isCore: true });
 		// nodes.push({id:1145141919810});
 		setNodes([nodes[0]]);
@@ -197,6 +261,10 @@ export const Controls: React.FC = () => {
 
 	// 移除资产标记（按钮）
 	const removeCoreBtn = () => {
+		if (!selectedNodes) {
+			alert('尚未选择节点！');
+			return;
+		}
 		const coreNodes = [];
 		for (const nodeId of selectedNodes) {
 			const node = nodes[0].find((node) => node.id === nodeId);
@@ -205,6 +273,10 @@ export const Controls: React.FC = () => {
 				node.isCore = false;
 				coreNodes.push(nodeId);
 			}
+		}
+		if (!coreNodes) {
+			alert('请选择包含IP或Cert的节点！');
+			return;
 		}
 		httpSetCore({ nodes: coreNodes, isCore: false });
 		setNodes([nodes[0]]);
@@ -218,7 +290,7 @@ export const Controls: React.FC = () => {
 		}
 		httpSaveView({ communityId: curCommunity });
 	}
-	
+
 	// 保存视图（回调）
 	const saveView = (data) => {
 		setCommunityList(data.communitiesInfo);
@@ -228,7 +300,7 @@ export const Controls: React.FC = () => {
 	const resetCommunityBtn = () => {
 		httpReset(curCommunity);
 	}
-	
+
 	// 重置社区（回调）
 	const resetCommunityData = (data) => {
 		setNodes([data.nodes]);
@@ -239,17 +311,18 @@ export const Controls: React.FC = () => {
 	const resetAllBtn = () => {
 		httpResetAll();
 	}
-	
+
 
 	// 初始化事件绑定
 	useEffect(() => {
-		httpInit();
 		eventBus.addListener('init', initData);
+		eventBus.addListener('searchNode', searchNode);
 		eventBus.addListener('expandNode', expandNodeData);
 		eventBus.addListener('reset', resetCommunityData);
 		eventBus.addListener('resetAll', initData);
 		return () => {
 			eventBus.removeListener('init', initData);
+			eventBus.removeListener('searchNode', searchNode);
 			eventBus.removeListener('expandNode', expandNodeData);
 			eventBus.removeListener('reset', resetCommunityData);
 			eventBus.removeListener('resetAll', initData);
@@ -259,27 +332,29 @@ export const Controls: React.FC = () => {
 
 	// 数据监听（饼图、柱状图节点属性修改）
 	useEffect(() => {
-		// console.log("数据监听");
 		eventBus.emit('updatePieData', nodes[0]);
-		eventBus.emit('updateCoreBarData', nodes[0], links[0]);
+		eventBus.emit('updateCoreBarData', coreBarData(nodes[0], links[0]));
 	}, [nodes]);
 
 	// 数据监听（力导向图数据修改
 	useEffect(() => {
-		// console.log("数据监听");
 		eventBus.emit('updateForceData', nodes[0], links[0]);
 	}, [links]);
 
 	// 数据监听（社区列表修改）
 	useEffect(() => {
+		// console.log('数据更新提交');
 		eventBus.emit('updateCommunityList', communityList);
 	}, [communityList]);
 
-	
-	
+	useEffect(() => {
+		eventBus.emit('updateCurCommunity', curCommunity);
+	}, [curCommunity]);
+	// const [test, setTest] = useState([1, 2]);
+
 	// const testbutton = () => {
 	// 	console.log(test);
-	// 	setTest([test[0]]);
+	// 	setTest(1);
 	// }
 
 	// useEffect(() => {

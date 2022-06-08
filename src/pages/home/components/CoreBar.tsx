@@ -26,11 +26,62 @@ export const CoreBar: React.FC = () => {
 
 	let barChart: echarts.ECharts;
 
-	const [nodes, setNodes] = useState([]);
+	// const [nodes, setNodes] = useState([]);
 
-	const [links, setLinks] = useState([]);
+	// const [links, setLinks] = useState([]);
+
+	const [coreIndustry, setCoreIndustry] = useState({
+		nodeIds: [],
+		series: []
+	});
+
 
 	const updateCoreBar = useCallback((nodeIds: any[], series: any[]) => {
+		const dataZoomOption = [
+			{
+				type: 'slider',
+				realtime: true,
+				orient: 'vertical',
+				handleSize: 0,
+				moveHandleSize: 6,
+				brushSelect: true,
+				// borderColor: 'transparent',
+				fillerColor: 'rgba(0,255,0,1)',
+
+				moveHandleStyle: {
+					color: 'rgba(200,200,200,1)',
+					borderColor: 'rgba(200,200,200,1)',
+					borderWidth: 6,
+					borderCap: 'round',
+					borderJoin: 'round',
+					opacity: 1,
+				},
+
+				borderColor: 'rgba(150,150,150,1)',
+
+				// handleIcon: 'path://M30.9,53.2C16.8,53.2,5.3,41.7,5.3,27.6S16.8,2,30.9,2C45,2,56.4,13.5,56.4,27.6S45,53.2,30.9,53.2z M30.9,3.5M36.9,35.8h-1.3z M27.8,35.8 h-1.3H27L27.8,35.8L27.8,35.8z',
+				showDetail: false,
+				showDataShadow: true,
+				maxValueSpan: 9,
+				minValueSpan: 4,
+				width: 0,
+				throttle: 10,
+				// height: '70%',
+				top: 100,
+				bottom: 20,
+				right: '6%',
+			},
+			{
+				type: 'inside',
+				maxValueSpan: 9,
+				minValueSpan: 4,
+				orient: 'vertical',
+				filterMode: 'none',
+				zoomOnMouseWheel: 'ctrl',
+				moveOnMouseWheel: true,
+			},
+		];
+
 		const data = [];
 
 		series.map((barData) => {
@@ -52,14 +103,14 @@ export const CoreBar: React.FC = () => {
 			});
 		});
 
-		if (barChart) {
-			barChart.setOption({
-				series: data,
-				yAxis: {
-					data: nodeIds,
-				},
-			});
-		}
+		barChart.setOption({
+			series: data,
+			yAxis: {
+				data: nodeIds,
+			},
+			dataZoom: nodeIds.length > 8 ? dataZoomOption : [],
+		});
+
 	}, []);
 
 	useEffect(() => {
@@ -78,42 +129,6 @@ export const CoreBar: React.FC = () => {
 					color: '#333',
 				},
 			},
-			dataZoom: [
-				{
-					type: 'slider',
-					realtime: true,
-					orient: 'vertical',
-					handleSize: 0,
-					moveHandleSize: 10,
-					brushSelect: false,
-					// borderColor: 'transparent',
-					handleStyle: {
-						borderCap: 'round',
-					},
-					fillerColor: 'rgba(0,0,0,0.2)',
-					// handleIcon: 'path://M30.9,53.2C16.8,53.2,5.3,41.7,5.3,27.6S16.8,2,30.9,2C45,2,56.4,13.5,56.4,27.6S45,53.2,30.9,53.2z M30.9,3.5M36.9,35.8h-1.3z M27.8,35.8 h-1.3H27L27.8,35.8L27.8,35.8z',
-					// backgroundColor: 'rgba(0, 0, 0, 0)',
-					showDetail: false,
-					showDataShadow: false,
-					maxValueSpan: 6,
-					minValueSpan: 4,
-					width: 8,
-					throttle: 10,
-					height: '70%',
-					top: '20%',
-					right: '2%',
-				},
-				{
-					type: 'inside',
-					maxValueSpan: 6,
-					minValueSpan: 4,
-					orient: 'vertical',
-					filterMode: 'none',
-					zoomOnMouseWheel: 'ctrl',
-					moveOnMouseWheel: true,
-				},
-			],
-
 			tooltip: {
 				trigger: 'axis',
 				axisPointer: {
@@ -124,20 +139,28 @@ export const CoreBar: React.FC = () => {
 				top: 40,
 				align: 'left',
 			},
+			dataZoom: [],
 			grid: {
-				left: '2%',
-				right: '9%',
+				left: '1%',
+				right: '12%',
 				top: 90,
 				bottom: 10,
 				containLabel: true,
 			},
 			xAxis: {
 				type: 'value',
+				position: 'top',
+				axisLine: { show: false }, // 轴线
+				axisTick: { show: true }, // 刻度
+				splitLine: { show: true }, // 分隔线
 			},
 			yAxis: {
 				type: 'category',
 				data: [],
 				boundaryGap: true,
+				axisLine: { show: false }, // 轴线
+				axisTick: { show: false }, // 刻度
+				inverse: true,
 				axisLabel: {
 					// show: false,
 					width: 50,
@@ -161,9 +184,8 @@ export const CoreBar: React.FC = () => {
 		// 	console.log('leave');
 		// });
 
-		const updateCoreBarData = (nodes, links) => {
-			setLinks(links);
-			setNodes(nodes);
+		const updateCoreBarData = (coreBarData) => {
+			setCoreIndustry(coreBarData);
 		};
 
 		eventBus.addListener('updateCoreBarData', updateCoreBarData);
@@ -176,49 +198,8 @@ export const CoreBar: React.FC = () => {
 	}, []);
 
 	useEffect(() => {
-		const coreNodes = [];
-		const nodeIds = [];
-		const series = [
-			{ name: 'A', data: [] },
-			{ name: 'B', data: [] },
-			{ name: 'C', data: [] },
-			{ name: 'D', data: [] },
-			{ name: 'E', data: [] },
-			{ name: 'F', data: [] },
-			{ name: 'G', data: [] },
-			{ name: 'H', data: [] },
-			{ name: 'I', data: [] },
-		];
-
-		for (const node of nodes) {
-			if (node.isCore) {
-				nodeIds.push(node.uid);
-				coreNodes.push({ id: node.id, linkNodeIds: [] });
-			}
-		}
-
-		for (const coreNode of coreNodes) {
-			for (const link of links) {
-				if (link.endId === coreNode.id && (link.type === 'r_dns_a' || link.type === 'r_cert')) {
-					coreNode.linkNodeIds.push(link.startId);
-				}
-			}
-			for (const sery of series) {
-				sery.data.push(0);
-			}
-			for (const linkNodeId of coreNode.linkNodeIds) {
-				const node = nodes.find((node) => node.id === linkNodeId);
-				const industries = eval(node.industry);
-				if (industries) {
-					for (const industry of industries) {
-						const el = series[industry.charCodeAt() - 'A'.charCodeAt()];
-						el.data[el.data.length - 1]++;
-					}
-				}
-			}
-		}
-		updateCoreBar(nodeIds, series);
-	}, [nodes]);
+		updateCoreBar(coreIndustry.nodeIds, coreIndustry.series);
+	}, [coreIndustry]);
 
 	return <div ref={containerRef} className="w-full h-50vh"></div>;
 };
