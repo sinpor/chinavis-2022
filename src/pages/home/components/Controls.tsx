@@ -179,7 +179,7 @@ export const Controls: React.FC = () => {
 		setSelectedNodes([]);
 	}
 
-	// 资产标记
+	// 资产标记（按钮）
 	const setCoreBtn = () => {
 		const coreNodes = [];
 		for (const nodeId of selectedNodes) {
@@ -195,7 +195,7 @@ export const Controls: React.FC = () => {
 		setNodes([nodes[0]]);
 	};
 
-	// 移除资产标记
+	// 移除资产标记（按钮）
 	const removeCoreBtn = () => {
 		const coreNodes = [];
 		for (const nodeId of selectedNodes) {
@@ -210,14 +210,73 @@ export const Controls: React.FC = () => {
 		setNodes([nodes[0]]);
 	};
 
-	// 保存视图
+	// 保存视图（按钮）
 	const saveViewBtn = () => {
 		for (const node of nodes[0]) {
 			// TODO: 修改node
+			node.community = curCommunity;
 		}
 		httpSaveView({ communityId: curCommunity });
 	}
+	
+	// 保存视图（回调）
+	const saveView = (data) => {
+		setCommunityList(data.communitiesInfo);
+	}
 
+	// 重置社区（按钮）
+	const resetCommunityBtn = () => {
+		httpReset(curCommunity);
+	}
+	
+	// 重置社区（回调）
+	const resetCommunityData = (data) => {
+		setNodes([data.nodes]);
+		setLinks([data.links]);
+	};
+
+	// 重置所有节点（按钮）
+	const resetAllBtn = () => {
+		httpResetAll();
+	}
+	
+
+	// 初始化事件绑定
+	useEffect(() => {
+		httpInit();
+		eventBus.addListener('init', initData);
+		eventBus.addListener('expandNode', expandNodeData);
+		eventBus.addListener('reset', resetCommunityData);
+		eventBus.addListener('resetAll', initData);
+		return () => {
+			eventBus.removeListener('init', initData);
+			eventBus.removeListener('expandNode', expandNodeData);
+			eventBus.removeListener('reset', resetCommunityData);
+			eventBus.removeListener('resetAll', initData);
+		}
+	}, []);
+
+
+	// 数据监听（饼图、柱状图节点属性修改）
+	useEffect(() => {
+		// console.log("数据监听");
+		eventBus.emit('updatePieData', nodes[0]);
+		eventBus.emit('updateCoreBarData', nodes[0], links[0]);
+	}, [nodes]);
+
+	// 数据监听（力导向图数据修改
+	useEffect(() => {
+		// console.log("数据监听");
+		eventBus.emit('updateForceData', nodes[0], links[0]);
+	}, [links]);
+
+	// 数据监听（社区列表修改）
+	useEffect(() => {
+		eventBus.emit('updateCommunityList', communityList);
+	}, [communityList]);
+
+	
+	
 	// const testbutton = () => {
 	// 	console.log(test);
 	// 	setTest([test[0]]);
@@ -227,40 +286,6 @@ export const Controls: React.FC = () => {
 	// 	console.log("1145141919810");
 	// }, [test]);
 
-
-	const resetData = () => { };
-
-	// 初始化事件绑定
-	useEffect(() => {
-		eventBus.addListener('init', initData);
-		eventBus.addListener('expandNode', expandNodeData);
-		eventBus.addListener('reset', resetData);
-		return () => {
-			eventBus.removeListener('init', initData);
-			eventBus.removeListener('expandNode', expandNodeData);
-			eventBus.removeListener('reset', resetData);
-		}
-	}, []);
-
-	// 数据监听
-	useEffect(() => {
-		// console.log("数据监听");
-		eventBus.emit('updatePieData', nodes[0]);
-		eventBus.emit('updateCoreBarData', nodes[0], links[0]);
-	}, [nodes]);
-
-	useEffect(() => {
-		// console.log("数据监听");
-		eventBus.emit('updateForceData', nodes[0], links[0]);
-	}, [links]);
-
-	useEffect(() => {
-		eventBus.emit('updateCommunityList', communityList);
-	}, [communityList]);
-
-	useEffect(() => {
-		httpInit();
-	}, []);
 
 	//			<button onClick={updatePieData} className="w-100px border h-30px">修改pie</button>
 	//			<button onClick={updateCoreBarData} className="w-100px border h-30px">修改coreBar</button>
@@ -275,6 +300,9 @@ export const Controls: React.FC = () => {
 			<button onClick={setCoreBtn} className="w-100px border h-30px">资产标记</button>
 			<button onClick={removeCoreBtn} className="w-100px border h-30px">资产移除</button>
 			<button onClick={saveViewBtn} className="w-100px border h-30px">保存视图</button>
+			<button onClick={resetCommunityBtn} className="w-100px border h-30px">重置社区</button>
+			<button onClick={resetAllBtn} className="w-100px border h-30px">重置所有节点</button>
 		</div>
 	);
 };
+
