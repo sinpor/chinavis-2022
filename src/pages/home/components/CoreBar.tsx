@@ -203,3 +203,4 @@ export const CoreBar: React.FC = () => {
 
 	return <div ref={containerRef} className="w-full h-50vh"></div>;
 };
+

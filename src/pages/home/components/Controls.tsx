@@ -380,4 +380,3 @@ export const Controls: React.FC = () => {
 		</div>
 	);
 };
-
