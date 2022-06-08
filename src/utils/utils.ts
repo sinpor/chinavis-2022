@@ -12,3 +12,7 @@ export function getIndustryNames(values: IndustryType[] = []) {
 export function getIndustryColor(val: IndustryType): string {
   return industryColorScale(val);
 }
+
+export function getIndustry(str: string): IndustryType[] {
+  return eval(str);
+}

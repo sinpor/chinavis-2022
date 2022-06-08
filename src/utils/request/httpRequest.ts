@@ -1,42 +1,46 @@
-import axios from "axios";
+// import request from "request";
 
-import { eventBus } from "../bus/bus";
+import { eventBus } from '../bus/bus';
+import { request } from './request';
 
-axios.defaults.baseURL = "http://10.170.47.171:5000/";
+// axios.defaults.baseURL = "http://10.170.47.171:5000/";
 
 const httpRequest = (req, url, params) => {
 	console.log('start');
 	switch (req) {
-		case "GET":
-			axios({
-				url: url,
-				method: 'GET',
-				headers: {},
-				params: params,
-			}).then(response => {
-				console.log("GET操作完成");
-				// console.log(response.data);
-				eventBus.emit(url, response.data);
-				// return response.data;
-			});
-			break;
+    case 'GET':
+      return request({
+        url: url,
+        method: 'GET',
+        headers: {},
+        params: params,
+      }).then((response) => {
+        console.log('GET操作完成');
+        // console.log(response.data);
+        eventBus.emit(url, response.data);
+        return response.data;
+      });
+      break;
 
-		case "POST":
-			axios({
-				url: url,
-				method: 'POST',
-				headers: {},
-				data: params,
-			}).then(response => {
-				console.log("POST操作完成");
-				// if (response.data.success) {
-				// 	setTimeout(alert('处理完成！'), 2000);
-				// }
-			}).catch(error => {
-				console.log(error);
-			});
-			break;
-	}
+    case 'POST':
+      return request({
+        url: url,
+        method: 'POST',
+        headers: {},
+        data: params,
+      })
+        .then((response) => {
+          console.log('POST操作完成');
+          // if (response.data.success) {
+          // 	setTimeout(alert('处理完成！'), 2000);
+          // }
+          return response;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      break;
+  }
 };
 
 
