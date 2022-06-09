@@ -8,6 +8,7 @@ import * as echarts from 'echarts/core';
 import { TooltipComponent, GridComponent, LegendComponent, DataZoomComponent } from 'echarts/components';
 import { BarChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
+import { store } from "../../../store";
 
 echarts.use([TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, BarChart, CanvasRenderer]);
 
@@ -39,7 +40,6 @@ export const List: React.FC = () => {
 	}, []);
 
 	const selectedBorder = useCallback((community, comList) => {
-
 		console.log("当前社区 ", community);
 		console.log("当前社区列表 ", comList);
 		// console.log("当前图表 ", comBarChart._model.option.yAxis[0].data);
@@ -67,11 +67,14 @@ export const List: React.FC = () => {
 			console.log("communityList: ", communityList);
 			// console.log("tempClick", num);
 			if (lastCommunity !== num) {
-				httpSelectCommunity({ community: num });
+				httpSelectCommunity({ community: num })?.then(res => {
+					store.updateCurrentData(res);
+				});
 				lastCommunity = num;
 			}
 		});
 	}, []);
+
 
 
 	useEffect(() => {
@@ -279,6 +282,11 @@ export const List: React.FC = () => {
 		updateComBar(communityData.Cname, communityData.allCom, communityData.crimeCom);
 	}, [communityData]);
 
+	// useEffect(() => {
+	// 	selectedBorder(curCommunity, communityList);
+	// }, [curCommunity]);
+
+
 	useEffect(() => {
 		console.log("newList: ", curCommunity);
 		selectedBorder(curCommunity, communityList);
@@ -297,14 +305,13 @@ export const List: React.FC = () => {
 			</div>
 			<div ref={containerRef} className="w-full h-650px"></div>
 		</div>
-
 	);
 
 	// return (
 	// 	<div className="h-700px">
 	// 		<div className="flex h-7%">
-	// 			<button onClick={sortNodeNumBtn} className="w-1/2 border h-30px">按节点数量排序</button>
-	// 			<button onClick={sortIndustryNumBtn} className="w-1/2 border h-30px">按黑产数量排序</button>
+	// 			<button onClick={sortNodeNumBtn} className="border h-30px w-1/2">按节点数量排序</button>
+	// 			<button onClick={sortIndustryNumBtn} className="border h-30px w-1/2">按黑产数量排序</button>
 	// 		</div>
 	// 		<ReactEcharts className='border'
 	// 			style={{ height: '93%', width: '100%' }}
