@@ -6,10 +6,14 @@ import { getIndustry } from '../utils/utils';
 class Store {
   constructor() {
     makeAutoObservable(this);
+    this.updateSelectedNodes = this.updateSelectedNodes.bind(this);
   }
   initData: any = {};
 
   currentData: IForceData = {} as IForceData;
+
+  //   选中的节点
+  selectedNodes: number[] = [];
 
   updateInitData(data: any) {
     this.initData = {
@@ -25,6 +29,10 @@ class Store {
       ...data,
       nodes: data.nodes?.map((d: INodeData) => ({ ...d, industry: getIndustry(d.industry as any) })),
     };
+  }
+
+  updateSelectedNodes(nodes: number[]) {
+    this.selectedNodes = nodes;
   }
 }
 
