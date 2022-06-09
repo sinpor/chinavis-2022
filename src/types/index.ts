@@ -1,8 +1,8 @@
 export interface INodeData {
   community: string;
-  id: number;
+  id: number | string;
   industry: IndustryType[];
-  isCore: string;
+  isCore: boolean;
   label: NodeType;
   name: string;
   uid: string;
@@ -30,6 +30,11 @@ export type LinkType =
 export type NodeType = 'Domain' | 'IP' | 'Cert' | 'Whois_Name' | 'Whois_Phone' | 'Whois_Email' | 'IP_C' | 'ASN';
 
 export type IndustryType = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I';
+
+export interface IForceData {
+  nodes: INodeData[];
+  links: ILinkData[];
+}
 
 export const LinkTypeNames = {
   r_cert: '域名使用的安全证书',
