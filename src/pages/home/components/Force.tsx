@@ -52,13 +52,13 @@ const nodeColorScale = d3.scaleOrdinal(nodeTypes, colors);
 const linkColorScale = d3.scaleOrdinal(linkTypes, linkColors);
 
 export const Force: React.FC = observer(() => {
-  const { currentData } = useContext(StoreContext);
+  const { currentData, updateSelectedNodes } = useContext(StoreContext);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const svg = useRef<Selection<BaseType, any, any, any> | null>();
 
-  const simulation = useRef<Simulation<any, any> | null>(null);
+  const simulation = useRef<Simulation<INode, ILink> | null>(null);
 
   const forceNode = useRef<ForceManyBody<INode>>();
 
@@ -157,6 +157,14 @@ export const Force: React.FC = observer(() => {
             show: true,
             data: data.originData,
           });
+        })
+        .on('click', () => {
+          const { offsetX, offsetY } = d3.event;
+          const data = simulation.current?.find(offsetX - width / 2, offsetY - height / 2, 5);
+
+          if (data) {
+            updateSelectedNodes([data.originData.id as number]);
+          }
         });
 
       const coreNode = nodeG
@@ -179,7 +187,7 @@ export const Force: React.FC = observer(() => {
       }
 
       function dragsubject(): INode {
-        return simulation.current?.find(d3.event.x, d3.event.y);
+        return simulation.current?.find(d3.event.x, d3.event.y) as INode;
       }
 
       function dragstarted() {
