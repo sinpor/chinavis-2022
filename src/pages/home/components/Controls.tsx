@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 // import { request } from "../../../utils/request/request";
 // import { httpRequest } from "../../../utils/request/httpRequest";
 
@@ -14,6 +14,9 @@ import {
 } from "../../../utils/request/httpRequest";
 
 import { eventBus } from "../../../utils/bus/bus";
+import { StoreContext } from "../../../store";
+import { observer } from "mobx-react";
+import { toJS } from "mobx";
 
 // httpInit();
 
@@ -64,7 +67,7 @@ const coreBarData = (nodes, links) => {
 	return { nodeIds: nodeIds, series: series };
 }
 
-export const Controls: React.FC = () => {
+export const Controls: React.FC = observer(() => {
 
 	// Pie数据测试
 	// const [pieDataPath, setPieDataPath] = useState("/mock/community_1.json");
@@ -153,6 +156,8 @@ export const Controls: React.FC = () => {
 
 
 	// 正式内容
+
+    const store = useContext(StoreContext)
 
 	const [communityList, setCommunityList] = useState([]);
 
@@ -395,6 +400,10 @@ export const Controls: React.FC = () => {
 		eventBus.emit('updateCurCommunity', curCommunity);
 	}, [curCommunity]);
 
+    useEffect(() => {
+        setSelectedNodes(toJS(store.selectedNodes));
+    }, [store.selectedNodes])
+
 
 	//			<button onClick={updatePieData} className="border h-30px w-100px">修改pie</button>
 	//			<button onClick={updateCoreBarData} className="border h-30px w-100px">修改coreBar</button>
@@ -412,4 +421,4 @@ export const Controls: React.FC = () => {
 			<button onClick={resetAllBtn} className="border h-30px w-100px">重置所有数据</button>
 		</div>
 	);
-};
+});
