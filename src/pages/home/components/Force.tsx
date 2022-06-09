@@ -11,9 +11,10 @@ import {
 } from 'd3';
 import { Slider } from 'antd';
 import { NodePopover } from './NodePopover';
-import { ILinkData, INodeData } from '../../../types';
+import { ILinkData, INodeData, NodeTypeNames, LinkTypeNames } from '../../../types';
 import { observer } from 'mobx-react';
 import { StoreContext } from '../../../store';
+import { request } from '../../../utils/request/request';
 
 const linkTypes = [
   'r_cert',
@@ -42,8 +43,16 @@ interface ILink extends SimulationLinkDatum<INode> {
 
 let timer = 0;
 
+const colors = d3.schemeTableau10;
+
+const linkColors = d3.schemePastel1;
+
+const nodeColorScale = d3.scaleOrdinal(nodeTypes, colors);
+
+const linkColorScale = d3.scaleOrdinal(linkTypes, linkColors);
+
 export const Force: React.FC = observer(() => {
-  const { initData } = useContext(StoreContext);
+  const { currentData } = useContext(StoreContext);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -71,7 +80,7 @@ export const Force: React.FC = observer(() => {
   });
 
   const init = useCallback((nodes: INode[], links: ILink[]) => {
-    svg.current = d3.select(containerRef.current).select('svg');
+    svg.current = d3.select(containerRef.current).select('svg.force');
 
     const forceNode = d3.forceManyBody<INode>();
     const forceLink = d3.forceLink<INode, ILink>(links).id((d) => d.id);
@@ -90,14 +99,6 @@ export const Force: React.FC = observer(() => {
 
   const initChart = useCallback(
     (nodes: INode[], links: ILink[]) => {
-      const colors = d3.schemeTableau10;
-
-      const linkColors = d3.schemePastel1;
-
-      const nodeColorScale = d3.scaleOrdinal(nodeTypes, colors);
-
-      const linkColorScale = d3.scaleOrdinal(linkTypes, linkColors);
-
       simulation.current?.on('tick', ticked);
 
       const { width, height } = box;
@@ -107,6 +108,8 @@ export const Force: React.FC = observer(() => {
       svg.current?.attr('style', 'max-width: 100%; height: auto; height: intrinsic;');
 
       const globalG = svg.current?.append('g').attr('transform', `translate(${width / 2}, ${height / 2})`);
+
+      const nodeG = globalG?.append('g');
 
       const dragRect = globalG
         ?.append('rect')
@@ -156,14 +159,15 @@ export const Force: React.FC = observer(() => {
           });
         });
 
-      function ticked() {
-        // link
-        //   ?.attr('x1', (d) => (d.source as INode).x || '')
-        //   .attr('y1', (d) => (d.source as INode)?.y || '')
-        //   .attr('x2', (d) => (d.target as INode)?.x || '')
-        //   .attr('y2', (d) => (d.target as INode)?.y || '');
+      const coreNode = nodeG
+        ?.append('use')
+        .attr('xlink:href', '#star')
+        .attr('width', 20)
+        .attr('height', 20)
+        .attr('transform', 'translate(-10, -10)')
+        .classed('hidden', true);
 
-        // node?.attr('cx', (d) => d.x || '').attr('cy', (d) => d.y || '');
+      function ticked() {
         context?.clearRect(0, 0, width, height);
         context?.save();
         context?.translate(width / 2, height / 2);
@@ -206,11 +210,22 @@ export const Force: React.FC = observer(() => {
       }
 
       function drawNode(d: INode) {
+        //   核心节点
+        if (d.originData.isCore) {
+          coreNode
+            ?.attr('fill', nodeColorScale(d.originData.label))
+            .attr('x', d?.x || 0)
+            .attr('y', d?.y || 0)
+            .classed('hidden', false);
+        }
+
         context?.beginPath();
         context?.save();
-        (context as CanvasRenderingContext2D).fillStyle = nodeColorScale(d.originData.label);
+        (context as CanvasRenderingContext2D).fillStyle = d.originData.isCore
+          ? ' rgba(0,0,0,0)'
+          : nodeColorScale(d.originData.label);
         context?.moveTo((d?.x || 0) + 3, d?.y || 0);
-        context?.arc(d?.x || 0, d?.y || 0, 3, 0, 2 * Math.PI);
+        context?.arc(d?.x || 0, d?.y || 0, d.originData.isCore ? 10 : 3, 0, 2 * Math.PI);
         context?.fill();
         context?.restore();
       }
@@ -227,17 +242,17 @@ export const Force: React.FC = observer(() => {
   }, []);
 
   useEffect(() => {
-    if (box.width && initData?.nodes) {
-      //   request('/mock/community_1.json').then((res) => {
-
-      const { nodes, links } = initData;
+    if (box.width && currentData.nodes) {
+      //   request('/mock/community_1.json', { baseURL: '' }).then((res) => {
+      const { nodes, links } = currentData;
+      // const { nodes, relations: links } = res.data;
 
       if (box.width) {
-        const useNodes: INode[] = nodes.map((_: INodeData) => ({
-          id: _.id,
-          originData: { ..._, industry: Array.isArray(_.industry) ? _.industry : JSON.parse(_.industry) },
+        const useNodes: INode[] = nodes.map((_) => ({
+          id: _.id as string,
+          originData: _,
         }));
-        const useLinks: ILink[] = links.map((d: ILinkData) => ({
+        const useLinks: ILink[] = links.map((d) => ({
           source: d.startId,
           target: d.endId,
           originData: d,
@@ -258,7 +273,7 @@ export const Force: React.FC = observer(() => {
       }
       //   });
     }
-  }, [box, initData]);
+  }, [box, currentData]);
 
   function handleChangeStrength(val: number) {
     simulation.current?.stop();
@@ -291,13 +306,58 @@ export const Force: React.FC = observer(() => {
         <div className="text-gray-500">节点力</div>
         <Slider min={-20} max={-2} value={nodeStrength} onChange={handleChangeStrength} />
       </div>
+      <div className="p-4 bottom-0 left-0 absolute">
+        <div className="font-medium mb-4 text-gray-500">节点图例</div>
+        <div className="grid gap-y-2">
+          {nodeTypes.map((n) => (
+            <div key={n} className="flex items-center">
+              <span
+                className=" rounded-1 h-10px mr-2 w-10px inline-block"
+                style={{ backgroundColor: nodeColorScale(n) }}
+              ></span>
+              <span>{(NodeTypeNames as any)[n]}</span>
+            </div>
+          ))}
+          <div className="flex items-center">
+            <span className=" rounded-1  mr-2 text-red-400 text-10px inline-block">
+              <svg viewBox="0 0 1024 1024" width="1em" height="1em">
+                <use xlinkHref="#star" fill="currentColor"></use>
+              </svg>
+            </span>
+            <span>核心节点</span>
+          </div>
+        </div>
+      </div>
+      <div className="text-right p-4 right-0 bottom-0 absolute">
+        <div className="font-medium mb-4 text-gray-500">连线图例</div>
+        <div className="grid gap-y-2">
+          {linkTypes.map((l) => (
+            <div key={l} className="flex items-center justify-between">
+              <span>{(LinkTypeNames as any)[l]}</span>
+              <span className=" h-3px ml-2 w-30px inline-block" style={{ backgroundColor: linkColorScale(l) }}></span>
+            </div>
+          ))}
+        </div>
+      </div>
       <canvas className="h-full w-full z-0 absolute" />
       <svg
-        className="z-10 relative"
+        className="z-10 force relative"
         width={`${box.width}px`}
         height={`${box.height}px`}
         viewBox={`0 0 ${box.width} ${box.height}`}
       ></svg>
+      <svg className="hidden absolute">
+        <defs>
+          <symbol id="star" viewBox="0 0 576 512">
+            <path
+              fill="inherit"
+              stroke="black"
+              strokeWidth="0.5px"
+              d="M381.2 150.3L524.9 171.5C536.8 173.2 546.8 181.6 550.6 193.1C554.4 204.7 551.3 217.3 542.7 225.9L438.5 328.1L463.1 474.7C465.1 486.7 460.2 498.9 450.2 506C440.3 513.1 427.2 514 416.5 508.3L288.1 439.8L159.8 508.3C149 514 135.9 513.1 126 506C116.1 498.9 111.1 486.7 113.2 474.7L137.8 328.1L33.58 225.9C24.97 217.3 21.91 204.7 25.69 193.1C29.46 181.6 39.43 173.2 51.42 171.5L195 150.3L259.4 17.97C264.7 6.954 275.9-.0391 288.1-.0391C300.4-.0391 311.6 6.954 316.9 17.97L381.2 150.3z"
+            />
+          </symbol>
+        </defs>
+      </svg>
     </div>
   );
 });
