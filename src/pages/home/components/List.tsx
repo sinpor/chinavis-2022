@@ -8,6 +8,7 @@ import * as echarts from 'echarts/core';
 import { TooltipComponent, GridComponent, LegendComponent, DataZoomComponent } from 'echarts/components';
 import { BarChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
+import { store } from "../../../store";
 
 echarts.use([TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, BarChart, CanvasRenderer]);
 
@@ -201,12 +202,14 @@ export const List: React.FC = () => {
 
 
 		comBarChart.on('click', (params) => {
-			let num = params.name.split(" ")[1];
+			const num = params.name.split(" ")[1];
 			console.log("lastClick", curCommunity);
 			console.log("tempClick", num);
 			// eventBus.emit("ComId", num);
 			if (curCommunity !== num) {
-				httpSelectCommunity({ community: num })
+				httpSelectCommunity({ community: num })?.then(res => {
+                    store.updateCurrentData(res);
+                })
 				curCommunity = num;
 				eventBus.emit("changeCurCom", curCommunity);
 				selectedBorder();
@@ -287,10 +290,10 @@ export const List: React.FC = () => {
 	return (
 		<div className="h-700px">
 			<div className="flex h-50px">
-				<button onClick={sortNodeNumBtn} className="w-1/2 border h-30px">按节点数量排序</button>
-				<button onClick={sortIndustryNumBtn} className="w-1/2 border h-30px">按黑产数量排序</button>
+				<button onClick={sortNodeNumBtn} className="border h-30px w-1/2">按节点数量排序</button>
+				<button onClick={sortIndustryNumBtn} className="border h-30px w-1/2">按黑产数量排序</button>
 			</div>
-			<div ref={containerRef} className="w-full h-650px"></div>
+			<div ref={containerRef} className="h-650px w-full"></div>
 		</div>
 
 	);
@@ -298,8 +301,8 @@ export const List: React.FC = () => {
 	// return (
 	// 	<div className="h-700px">
 	// 		<div className="flex h-7%">
-	// 			<button onClick={sortNodeNumBtn} className="w-1/2 border h-30px">按节点数量排序</button>
-	// 			<button onClick={sortIndustryNumBtn} className="w-1/2 border h-30px">按黑产数量排序</button>
+	// 			<button onClick={sortNodeNumBtn} className="border h-30px w-1/2">按节点数量排序</button>
+	// 			<button onClick={sortIndustryNumBtn} className="border h-30px w-1/2">按黑产数量排序</button>
 	// 		</div>
 	// 		<ReactEcharts className='border'
 	// 			style={{ height: '93%', width: '100%' }}
