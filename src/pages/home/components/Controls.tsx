@@ -15,7 +15,7 @@ import {
 
 import { eventBus } from "../../../utils/bus/bus";
 
-httpInit();
+// httpInit();
 
 // 核心资产数据处理
 const coreBarData = (nodes, links) => {
@@ -396,20 +396,20 @@ export const Controls: React.FC = () => {
 	}, [curCommunity]);
 
 
-	//			<button onClick={updatePieData} className="w-100px border h-30px">修改pie</button>
-	//			<button onClick={updateCoreBarData} className="w-100px border h-30px">修改coreBar</button>
-	//			<button onClick={httpRequestTest} className="w-100px border h-30px">http测试</button>
-	//			<button onClick={testbutton} className="w-100px border h-30px">测试按钮</button>
+	//			<button onClick={updatePieData} className="border h-30px w-100px">修改pie</button>
+	//			<button onClick={updateCoreBarData} className="border h-30px w-100px">修改coreBar</button>
+	//			<button onClick={httpRequestTest} className="border h-30px w-100px">http测试</button>
+	//			<button onClick={testbutton} className="border h-30px w-100px">测试按钮</button>
 
 	return (
 		<div className="flex ">
-			<button onClick={expandNodeBtn} className="w-100px border h-30px">节点扩张</button>
-			<button onClick={removeNodesBtn} className="w-100px border h-30px">节点移除</button>
-			<button onClick={setCoreBtn} className="w-100px border h-30px">资产标记</button>
-			<button onClick={removeCoreBtn} className="w-100px border h-30px">资产移除</button>
-			<button onClick={saveViewBtn} className="w-100px border h-30px">保存视图</button>
-			<button onClick={resetCommunityBtn} className="w-100px border h-30px">重置社区</button>
-			<button onClick={resetAllBtn} className="w-100px border h-30px">重置所有数据</button>
+			<button onClick={expandNodeBtn} className="border h-30px w-100px">节点扩张</button>
+			<button onClick={removeNodesBtn} className="border h-30px w-100px">节点移除</button>
+			<button onClick={setCoreBtn} className="border h-30px w-100px">资产标记</button>
+			<button onClick={removeCoreBtn} className="border h-30px w-100px">资产移除</button>
+			<button onClick={saveViewBtn} className="border h-30px w-100px">保存视图</button>
+			<button onClick={resetCommunityBtn} className="border h-30px w-100px">重置社区</button>
+			<button onClick={resetAllBtn} className="border h-30px w-100px">重置所有数据</button>
 		</div>
 	);
 };
