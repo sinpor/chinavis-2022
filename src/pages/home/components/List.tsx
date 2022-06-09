@@ -20,13 +20,11 @@ export const List: React.FC = () => {
 
 	const [communityList, setCommunityList] = useState([]);
 
-	// const [curCommunity, setCurCommunity] = useState(1);
+	const [curCommunity, setCurCommunity] = useState(107);
 
 	let comBarChart: echarts.ECharts;
 
-	let curCommunity = 1;
-
-	let tempcommunityList;
+	let lastCommunity = 1;
 
 	const updateComBar = useCallback((Cname, allCom, crimeCom) => {
 		comBarChart.setOption({
@@ -40,6 +38,40 @@ export const List: React.FC = () => {
 		});
 	}, []);
 
+	const selectedBorder = useCallback((community, comList) => {
+
+		console.log("当前社区 ", community);
+		console.log("当前社区列表 ", comList);
+		// console.log("当前图表 ", comBarChart._model.option.yAxis[0].data);
+		let targetCommunityId = comList.findIndex((com) => com.community === community);
+		const zeroCommunityId = comList.findIndex((com) => com.community === 0);
+		if (zeroCommunityId < targetCommunityId) {
+			targetCommunityId--;
+		}
+		comBarChart.dispatchAction({
+			type: 'select',
+			seriesId: 'comchart',
+			dataIndex: targetCommunityId
+		});
+		// console.log("index ", targetCommunityId);
+		// console.log("index ", targetCommunityId);
+
+	}, []);
+
+
+	const setClickEvent = useCallback((curCommunity, communityList) => {
+		comBarChart.off('click');
+		comBarChart.on('click', (params) => {
+			const num = params.name.split(" ")[1];
+			console.log("curCommunity: ", curCommunity);
+			console.log("communityList: ", communityList);
+			// console.log("tempClick", num);
+			if (lastCommunity !== num) {
+				httpSelectCommunity({ community: num });
+				lastCommunity = num;
+			}
+		});
+	}, []);
 
 
 	useEffect(() => {
@@ -182,51 +214,18 @@ export const List: React.FC = () => {
 		// 	console.log('leave');
 		// });
 
-		const selectedBorder = () => {
-			console.log("当前社区 ", curCommunity);
-			console.log("当前图表 ", comBarChart._model.option.yAxis[0].data);
-			let targetCommunityId = tempcommunityList.findIndex((com) => com.community === curCommunity);
-			const zeroCommunityId = tempcommunityList.findIndex((com) => com.community === 0);
-			if (zeroCommunityId < targetCommunityId) {
-				targetCommunityId--;
-			}
-			comBarChart.dispatchAction({
-				type: 'select',
-				seriesId: 'comchart',
-				dataIndex: targetCommunityId
-			});
-			console.log("index ", targetCommunityId);
-			console.log("index ", targetCommunityId);
-		}
-
-
 		comBarChart.on('click', (params) => {
-			let num = params.name.split(" ")[1];
-			console.log("lastClick", curCommunity);
-			console.log("tempClick", num);
-			// eventBus.emit("ComId", num);
-			if (curCommunity !== num) {
-				httpSelectCommunity({ community: num })
-				curCommunity = num;
-				eventBus.emit("changeCurCom", curCommunity);
-				selectedBorder();
-			}
-			console.log("curCommunity", curCommunity);
-			console.log("tempcommunityList", tempcommunityList);
+			clickBar(params.name.split(" ")[1], curCommunity, communityList);
 		});
 
 		// 更新当前社区编号
 		const updateCurCommunity = (data) => {
-			console.log("data", data);
-			curCommunity = data;
-			console.log("curCommunity", curCommunity);
-			selectedBorder();
+			setCurCommunity(data)
 		}
 
 		// 更新列表（回调）
 		const updateCommunityList = (communityList) => {
 			setCommunityList(communityList.sort((a, b) => b.nodeNum - a.nodeNum));
-			tempcommunityList = communityList.sort((a, b) => b.nodeNum - a.nodeNum);
 		}
 
 		eventBus.addListener('updateCurCommunity', updateCurCommunity);
@@ -280,9 +279,15 @@ export const List: React.FC = () => {
 		updateComBar(communityData.Cname, communityData.allCom, communityData.crimeCom);
 	}, [communityData]);
 
-	// useEffect(() => {
-	// 	selectedBorder(curCommunity, communityList);
-	// }, [curCommunity]);
+	useEffect(() => {
+		console.log("newList: ", curCommunity);
+		selectedBorder(curCommunity, communityList);
+	}, [curCommunity]);
+
+	useEffect(() => {
+		setClickEvent(curCommunity, communityList);
+	}, [curCommunity]);
+
 
 	return (
 		<div className="h-700px">

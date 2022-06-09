@@ -8,13 +8,29 @@ import { httpSearchNode } from "../../../utils/request/httpRequest";
 
 const { Search } = Input;
 
-// 搜索节点（按钮）
-const onSearch = (value: string) => {
-	httpSearchNode({ nodeUid: value });
-	// eventBus.emit("clue", value);
-};
+
 
 export const SearchId: React.FC = () => {
+
+	const [curCommunity, setCurCommunity] = useState(-1);
+
+	// 搜索节点（按钮）
+	const onSearch = (value: string) => {
+		httpSearchNode({ nodeUid: value });
+		// eventBus.emit("clue", value);
+	};
+
+	const updateCurCommunity = (data) => {
+		setCurCommunity(data)
+	}
+
+	useEffect(() => {
+		eventBus.addListener('updateCurCommunity', updateCurCommunity);
+		return () => {
+			eventBus.removeListener('updateCurCommunity', updateCurCommunity);
+		}
+	}, []);
+
 	return (
 		<Space direction="vertical" className="w-full">
 			<Search

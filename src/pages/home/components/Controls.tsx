@@ -181,12 +181,13 @@ export const Controls: React.FC = () => {
 		tempcurCommunity = data.curCommunity;
 		tempnodes = data.nodes;
 		templinks = data.links;
+		console.log("initCtrl: ", tempcurCommunity);
 	}
 
 	// 搜索节点（回调）
-	const searchNode = (data) => {
-		console.log(tempcurCommunity);
-		console.log(data);
+	const searchNodeOrCommunity = (data) => {
+		console.log("Ctrl: ", tempcurCommunity);
+		// console.log(data);
 		if (data && tempcurCommunity !== data.curCommunity) {
 			setCurCommunity(data.curCommunity);
 			setNodes(data.nodes);
@@ -195,22 +196,12 @@ export const Controls: React.FC = () => {
 			tempcurCommunity = data.curCommunity;
 			tempnodes = data.nodes;
 			templinks = data.links;
-
-			console.log("社区", tempcurCommunity, tempnodes);
+			console.log("newCtrl: ", tempcurCommunity);
+			// console.log("社区", tempcurCommunity, tempnodes);
 			// setSelectedNodes([]);
 		}
 	}
 
-	// 选择社区（回调）
-	const selectCommunity = (data) => {
-		setNodes(data.nodes);
-		setLinks(data.links);
-
-		tempnodes = data.nodes;
-		templinks = data.links;
-
-		// console.log(tempnodes, templinks);
-	}
 
 	// 更改当前社区
 	const changeCurCom = (data) => {
@@ -249,17 +240,21 @@ export const Controls: React.FC = () => {
 			alert('尚未选择节点！');
 			return;
 		}
+		if (selectedNodes.length > 10) {
+			const rpl = confirm('当前选择节点数已超过10个，是否继续？');
+			if (!rpl) return;
+		}
 		const nodeList = [];
 		const linklist = [];
 		for (const node of nodes) {
 			if (!selectedNodes.includes(node.id)) {
-				nodeList.push(node)
+				nodeList.push(node);
 			}
 		}
 		for (const link of links) {
 			if (!(selectedNodes.includes(link.startId) &&
 				selectedNodes.includes(link.endId))) {
-				linklist
+				linklist.push(link);
 			}
 		}
 		httpRemoveNodes({ node: selectedNodes })
@@ -276,17 +271,20 @@ export const Controls: React.FC = () => {
 			alert('尚未选择节点！');
 			return;
 		}
+		if (selectedNodes.length > 10) {
+			const rpl = confirm('当前选择节点数已超过10个，是否继续？');
+			if (!rpl) return;
+		}
 		const coreNodes = [];
 		for (const nodeId of selectedNodes) {
 			const node = nodes.find((node) => node.id === nodeId);
-			if ((node.label === 'IP' || node.label === 'Cert') &&
-				node.isCore === false) {
+			if (node.isCore === false) {
 				node.isCore = true;
 				coreNodes.push(nodeId);
 			}
 		}
 		if (!coreNodes) {
-			alert('请选择包含IP或Cert的节点！');
+			alert('请选择尚未标记的节点！');
 			return;
 		}
 		httpSetCore({ nodes: coreNodes, isCore: true });
@@ -301,17 +299,20 @@ export const Controls: React.FC = () => {
 			alert('尚未选择节点！');
 			return;
 		}
+		if (selectedNodes.length > 10) {
+			const rpl = confirm('当前选择节点数已超过10个，是否继续？');
+			if (!rpl) return;
+		}
 		const coreNodes = [];
 		for (const nodeId of selectedNodes) {
 			const node = nodes.find((node) => node.id === nodeId);
-			if ((node.label === 'IP' || node.label === 'Cert') &&
-				node.isCore === true) {
+			if (node.isCore === true) {
 				node.isCore = false;
 				coreNodes.push(nodeId);
 			}
 		}
 		if (!coreNodes) {
-			alert('请选择包含IP或Cert的节点！');
+			alert('请选择尚未标记的节点！');
 			return;
 		}
 		httpSetCore({ nodes: coreNodes, isCore: false });
@@ -324,13 +325,14 @@ export const Controls: React.FC = () => {
 		for (const node of nodes) {
 			node.community = curCommunity;
 		}
-		httpSaveView({ communityId: curCommunity });
+		httpSaveView({ community: curCommunity });
 	}
 
 	// 保存视图（回调）
-	const saveView = (data) => {
-		setCommunityList(data.communitiesInfo);
-		tempcommunityList = data.communitiesInfo;
+	const saveViewData = (data) => {
+		// setCommunityList(data.communitiesInfo);
+		// tempcommunityList = data.communitiesInfo;
+		console.log(data);
 	}
 
 	// 重置社区（按钮）
@@ -351,23 +353,25 @@ export const Controls: React.FC = () => {
 		httpResetAll();
 	}
 
-
 	// 初始化事件绑定
 	useEffect(() => {
 		eventBus.addListener('init', initData);
-		eventBus.addListener('searchNode', searchNode);
-		eventBus.addListener('changeCurCom', changeCurCom);
-		eventBus.addListener('selectCommunity', selectCommunity);
+		eventBus.addListener('searchNode', searchNodeOrCommunity);
+		eventBus.addListener('selectCommunity', searchNodeOrCommunity);
 		eventBus.addListener('expandNode', expandNodeData);
+		eventBus.addListener('saveView', saveViewData);
+
+
 		eventBus.addListener('reset', resetCommunityData);
 		eventBus.addListener('resetAll', initData);
 
 		return () => {
 			eventBus.removeListener('init', initData);
-			eventBus.removeListener('searchNode', searchNode);
-			eventBus.removeListener('changeCurCom', changeCurCom);
-			eventBus.removeListener('selectCommunity', selectCommunity);
+			eventBus.removeListener('searchNode', searchNodeOrCommunity);
+			eventBus.removeListener('selectCommunity', searchNodeOrCommunity);
 			eventBus.removeListener('expandNode', expandNodeData);
+			eventBus.removeListener('saveView', saveViewData);
+
 			eventBus.removeListener('reset', resetCommunityData);
 			eventBus.removeListener('resetAll', initData);
 		}
