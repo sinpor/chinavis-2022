@@ -19,4 +19,4 @@ class Store {
 
 export const store = new Store();
 
-export const storeContext = createContext<Store>(store);
+export const StoreContext = createContext<Store>(store);
