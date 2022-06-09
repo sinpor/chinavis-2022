@@ -2,7 +2,7 @@ export interface INodeData {
   community: string;
   id: number;
   industry: IndustryType[];
-  isCore: string;
+  isCore: boolean;
   label: NodeType;
   name: string;
   uid: string;
