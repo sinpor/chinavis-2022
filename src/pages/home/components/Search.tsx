@@ -1,19 +1,35 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Input, Space } from 'antd';
 import { AudioOutlined } from '@ant-design/icons';
 import { request } from "../../../utils/request/request";
-import { eventBus } from "../../../utils/bus/bus";
 import { httpSearchNode } from "../../../utils/request/httpRequest";
+
+import { store } from "../../../store";
 
 const { Search } = Input;
 
-
 export const SearchId: React.FC = () => {
 
+	let state = true;
 	// 搜索节点（按钮）
 	const onSearch = (value: string) => {
-		httpSearchNode({ nodeUid: value });
-		// eventBus.emit("clue", value);
+		if (!state) return;
+		state = false;
+		httpSearchNode({ nodeUid: value })?.then(res => {
+			if (!res.error) {
+				// store.initData.error = res.error;
+				// store.initData.curCommunity = res.curCommunity;
+				store.updateInitData({
+					...store.initData,
+					curCommunity: res.curCommunity,
+					error: res.error
+				})
+				store.updateCurrentData({nodes: res.nodes, links: res.links});
+			}
+			state = true;
+		}).catch(r => {
+			state = true;
+		});
 	};
 
 	return (

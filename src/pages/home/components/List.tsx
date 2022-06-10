@@ -40,8 +40,8 @@ export const List: React.FC = () => {
 	}, []);
 
 	const selectedBorder = useCallback((community, comList) => {
-		console.log("当前社区 ", community);
-		console.log("当前社区列表 ", comList);
+		// console.log("当前社区 ", community);
+		// console.log("当前社区列表 ", comList);
 		// console.log("当前图表 ", comBarChart._model.option.yAxis[0].data);
 		let targetCommunityId = comList.findIndex((com) => com.community === community);
 		const zeroCommunityId = comList.findIndex((com) => com.community === 0);
@@ -55,26 +55,29 @@ export const List: React.FC = () => {
 		});
 		// console.log("index ", targetCommunityId);
 		// console.log("index ", targetCommunityId);
-
 	}, []);
 
 
+	// 点击事件（选择社区）
 	const setClickEvent = useCallback((curCommunity, communityList) => {
 		comBarChart.off('click');
 		comBarChart.on('click', (params) => {
 			const num = params.name.split(" ")[1];
-			console.log("curCommunity: ", curCommunity);
-			console.log("communityList: ", communityList);
+			console.log("curCommunity1111: ", curCommunity);
+			// console.log("communityList: ", communityList);
 			// console.log("tempClick", num);
 			if (lastCommunity !== num) {
 				httpSelectCommunity({ community: num })?.then(res => {
+					store.updateInitData({
+						...store.initData,
+						curCommunity: res.curCommunity
+					})
 					store.updateCurrentData(res);
 				});
 				lastCommunity = num;
 			}
 		});
 	}, []);
-
 
 
 	useEffect(() => {
@@ -217,9 +220,6 @@ export const List: React.FC = () => {
 		// 	console.log('leave');
 		// });
 
-		comBarChart.on('click', (params) => {
-			clickBar(params.name.split(" ")[1], curCommunity, communityList);
-		});
 
 		// 更新当前社区编号
 		const updateCurCommunity = (data) => {
@@ -282,15 +282,10 @@ export const List: React.FC = () => {
 		updateComBar(communityData.Cname, communityData.allCom, communityData.crimeCom);
 	}, [communityData]);
 
-	// useEffect(() => {
-	// 	selectedBorder(curCommunity, communityList);
-	// }, [curCommunity]);
-
-
 	useEffect(() => {
 		console.log("newList: ", curCommunity);
 		selectedBorder(curCommunity, communityList);
-	}, [curCommunity]);
+	}, [curCommunity, communityList]);
 
 	useEffect(() => {
 		setClickEvent(curCommunity, communityList);

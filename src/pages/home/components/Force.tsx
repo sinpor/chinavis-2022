@@ -163,6 +163,7 @@ export const Force: React.FC = observer(() => {
           const data = simulation.current?.find(offsetX - width / 2, offsetY - height / 2, 5);
 
           if (data) {
+			console.log(data.originData.id as number);
             updateSelectedNodes([data.originData.id as number]);
           }
         });
@@ -252,7 +253,7 @@ export const Force: React.FC = observer(() => {
   useEffect(() => {
     if (box.width && currentData.nodes) {
       //   request('/mock/community_1.json', { baseURL: '' }).then((res) => {
-      const { nodes, links } = currentData;
+      const { links, nodes } = currentData;
       // const { nodes, relations: links } = res.data;
 
       if (box.width) {
