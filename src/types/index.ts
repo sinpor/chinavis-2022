@@ -6,6 +6,7 @@ export interface INodeData {
   label: NodeType;
   name: string;
   uid: string;
+  weight: number;
 }
 
 export interface ILinkData {
