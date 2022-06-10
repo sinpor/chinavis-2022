@@ -18,55 +18,6 @@ import { observer } from "mobx-react";
 import { toJS } from "mobx";
 
 
-// 核心资产数据处理
-const coreBarData = (nodes, links) => {
-	const coreNodes = [];
-	const nodeIds = [];
-	const series = [
-		{ name: 'A', data: [] },
-		{ name: 'B', data: [] },
-		{ name: 'C', data: [] },
-		{ name: 'D', data: [] },
-		{ name: 'E', data: [] },
-		{ name: 'F', data: [] },
-		{ name: 'G', data: [] },
-		{ name: 'H', data: [] },
-		{ name: 'I', data: [] },
-	];
-
-	for (const node of nodes) {
-		if (node.isCore) {
-			nodeIds.push(node.uid);
-			coreNodes.push({ id: node.id, linkNodeIds: [] });
-		}
-	}
-
-	for (const coreNode of coreNodes) {
-		for (const sery of series) {
-			sery.data.push(0);
-		}
-		for (const link of links) {
-			if (link.endId === coreNode.id) {
-				coreNode.linkNodeIds.push(link.startId);
-			}
-			if (link.startId === coreNode.id) {
-				coreNode.linkNodeIds.push(link.endId);
-			}
-		}
-		for (const linkNodeId of coreNode.linkNodeIds) {
-			const node = nodes.find((node) => node.id === linkNodeId);
-			const industries = eval(node.industry);
-			if (industries) {
-				for (const industry of industries) {
-					const el = series[industry.charCodeAt() - 'A'.charCodeAt()];
-					el.data[el.data.length - 1]++;
-				}
-			}
-		}
-	}
-	return { nodeIds: nodeIds, series: series };
-}
-
 export const Controls: React.FC = observer(() => {
 
 	const store = useContext(StoreContext);
@@ -80,22 +31,6 @@ export const Controls: React.FC = observer(() => {
 	const [nodes, setNodes] = useState([]);
 
 	const [links, setLinks] = useState([]);
-
-	let tempcommunityList;
-	let tempcurCommunity;
-	let tempselectedNodes;
-	let tempnodes;
-	let templinks;
-
-	// 搜索节点（回调）
-	const searchNodeOrCommunity = (data) => {
-		if (data && tempcurCommunity !== data.curCommunity) {
-			setCurCommunity(data.curCommunity);
-			setNodes(data.nodes);
-			setLinks(data.links);
-			setSelectedNodes([]);
-		}
-	}
 
 	// 扩张节点（按钮)
 	const expandNodeBtn = () => {
@@ -140,13 +75,14 @@ export const Controls: React.FC = observer(() => {
 				nodeList.push(node);
 			}
 		}
+		const temp = selectedNodes[0];
 		for (const link of links) {
-			if (!(selectedNodes.includes(link.startId) &&
+			if (!(selectedNodes.includes(link.startId) ||
 				selectedNodes.includes(link.endId))) {
 				linkList.push(link);
 			}
 		}
-		httpRemoveNodes({ node: selectedNodes })?.then(res => {
+		httpRemoveNodes({ nodes: selectedNodes })?.then(res => {
 			if (!res.error) {
 				setNodes(nodeList);
 				setLinks(linkList);
@@ -154,6 +90,55 @@ export const Controls: React.FC = observer(() => {
 				setSelectedNodes([]);
 			}
 		});
+	}
+
+	// 核心资产数据处理
+	const coreBarData = (nodes, links) => {
+		const coreNodes = [];
+		const nodeIds = [];
+		const series = [
+			{ name: 'A', data: [] },
+			{ name: 'B', data: [] },
+			{ name: 'C', data: [] },
+			{ name: 'D', data: [] },
+			{ name: 'E', data: [] },
+			{ name: 'F', data: [] },
+			{ name: 'G', data: [] },
+			{ name: 'H', data: [] },
+			{ name: 'I', data: [] },
+		];
+
+		for (const node of nodes) {
+			if (node.isCore) {
+				nodeIds.push(node.name + '\n' + node.uid);
+				coreNodes.push({ id: node.id, linkNodeIds: [] });
+			}
+		}
+
+		for (const coreNode of coreNodes) {
+			for (const sery of series) {
+				sery.data.push(0);
+			}
+			for (const link of links) {
+				if (link.endId === coreNode.id) {
+					coreNode.linkNodeIds.push(link.startId);
+				}
+				if (link.startId === coreNode.id) {
+					coreNode.linkNodeIds.push(link.endId);
+				}
+			}
+			for (const linkNodeId of coreNode.linkNodeIds) {
+				const node = nodes.find((node) => node.id === linkNodeId);
+				const industries = eval(node.industry);
+				if (industries) {
+					for (const industry of industries) {
+						const el = series[industry.charCodeAt() - 'A'.charCodeAt()];
+						el.data[el.data.length - 1]++;
+					}
+				}
+			}
+		}
+		return { nodeIds: nodeIds, series: series };
 	}
 
 	// 变更资产标记状态
@@ -180,15 +165,14 @@ export const Controls: React.FC = observer(() => {
 		}
 		httpSetCore({ nodes: coreNodes, isCore: status })?.then(res => {
 			if (!res.error) {
-				store.updateCurrentData({
-					...store.currentData,
-					nodes: nodes
-				});
+				// store.updateCurrentData({
+				// 	...store.currentData,
+				// 	nodes: nodes
+				// });
 			}
 		});
 		// nodes.push({id:1145141919810});
 		setNodes([...nodes]);
-		tempnodes = [...nodes];
 	}
 
 	// 资产标记（按钮）
@@ -207,22 +191,32 @@ export const Controls: React.FC = observer(() => {
 			node.community = curCommunity;
 		}
 		httpSaveView({ community: curCommunity })?.then(res => {
-			if (!res.error) alert('保存成功!');
+			if (!res.error) {
+				alert('保存成功!');
+				store.updateInitData({
+					...store.initData,
+					communitiesInfo: res.communitiesInfo
+				});
+			}
 		});
 	}
 
 	// 重置社区（按钮）
 	const resetCommunityBtn = () => {
-		httpReset(curCommunity);
+		httpReset(curCommunity)?.then(res => {
+			store.updateInitData({
+				...store.initData,
+				nodes: res.nodes,
+				links: res.links
+			});
+		});
 	}
 
-	// 重置社区（回调）
-	const resetCommunityData = (data) => {
-		setNodes(data.nodes);
-		setLinks(data.links);
-		tempnodes = data.nodes;
-		templinks = data.links;
-	};
+	const expandComBtn = () => {
+		// selectedNodes
+		// 还没写
+		console.log('还没写！！！');
+	}
 
 	// 重置所有数据（按钮）
 	const resetAllBtn = () => {
@@ -230,6 +224,8 @@ export const Controls: React.FC = observer(() => {
 			store.updateInitData(res);
 		});
 	}
+
+
 
 	// 数据监听（饼图、柱状图节点属性修改）
 	useEffect(() => {
@@ -266,8 +262,6 @@ export const Controls: React.FC = observer(() => {
 	useEffect(() => {
 		if (!store.initData.error && store.initData.communitiesInfo) {
 			setCommunityList(store.initData.communitiesInfo);
-			// setNodes(nodes);
-			// setLinks(links);
 		}
 	}, [store.initData.communitiesInfo]);
 
@@ -282,15 +276,17 @@ export const Controls: React.FC = observer(() => {
 	//			<button onClick={updateCoreBarData} className="border h-30px w-100px">修改coreBar</button>
 	//			<button onClick={httpRequestTest} className="border h-30px w-100px">http测试</button>
 	//			<button onClick={testbutton} className="border h-30px w-100px">测试按钮</button>
+	// <input type="text" placeholder="请输入支付金额" value={curCommunity} className="border h-30px w-100px"></input>
 
 	return (
 		<div className="flex ">
-			<button onClick={expandNodeBtn} className="border h-30px w-100px">节点扩张</button>
-			<button onClick={removeNodesBtn} className="border h-30px w-100px">节点移除</button>
-			<button onClick={addCoreBtn} className="border h-30px w-100px">资产标记</button>
-			<button onClick={removeCoreBtn} className="border h-30px w-100px">资产移除</button>
-			<button onClick={saveViewBtn} className="border h-30px w-100px">保存视图</button>
-			<button onClick={resetCommunityBtn} className="border h-30px w-100px">重置社区</button>
+			<button onClick={expandNodeBtn} className="border h-30px w-80px">节点扩张</button>
+			<button onClick={removeNodesBtn} className="border h-30px w-80px">节点移除</button>
+			<button onClick={addCoreBtn} className="border h-30px w-80px">资产标记</button>
+			<button onClick={removeCoreBtn} className="border h-30px w-80px">资产移除</button>
+			<button onClick={saveViewBtn} className="border h-30px w-80px">保存视图</button>
+			<button onClick={resetCommunityBtn} className="border h-30px w-80px">重置社区</button>
+			<button onClick={expandComBtn} className="border h-30px w-80px">拆分社区</button>
 			<button onClick={resetAllBtn} className="border h-30px w-100px">重置所有数据</button>
 		</div>
 	);

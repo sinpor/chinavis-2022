@@ -138,6 +138,17 @@ export const CoreBar: React.FC = () => {
 			legend: {
 				top: 40,
 				align: 'left',
+				// data: [
+				// 	{ name: '涉黄', itemStyle: { color: '#63b2ee' } },
+				// 	{ name: '涉赌', itemStyle: { color: '#76da91' } },
+				// 	{ name: '诈骗', itemStyle: { color: '#f8cb7f' } },
+				// 	{ name: '涉毒', itemStyle: { color: '#f89588' } },
+				// 	{ name: '涉枪', itemStyle: { color: '#7cd6cf' } },
+				// 	{ name: '黑客', itemStyle: { color: '#9192ab' } },
+				// 	{ name: '非法交易', itemStyle: { color: '#7898e1' } },
+				// 	{ name: '非法支付', itemStyle: { color: '#efa666' } },
+				// 	{ name: '其他', itemStyle: { color: '#eddd86' } },
+				// ]
 			},
 			dataZoom: [],
 			grid: {

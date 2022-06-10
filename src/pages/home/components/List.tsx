@@ -249,8 +249,9 @@ export const List: React.FC = () => {
 		const name = [];
 		const comNum = [];
 		const crimeNum = [];
+		// let i = 0;
 		for (const com of communityList) {
-			if (com.community !== 0) {
+			if (com.community !== 0 && com.nodeNum > 200) {
 				name.push(`社区 ${com.community}`);
 				comNum.push(com.nodeNum);
 				crimeNum.push(com.industryNum);
@@ -285,7 +286,7 @@ export const List: React.FC = () => {
 	useEffect(() => {
 		console.log("newList: ", curCommunity);
 		selectedBorder(curCommunity, communityList);
-	}, [curCommunity, communityList]);
+	}, [curCommunity]);
 
 	useEffect(() => {
 		setClickEvent(curCommunity, communityList);
@@ -293,12 +294,23 @@ export const List: React.FC = () => {
 
 
 	return (
-		<div className="h-700px">
-			<div className="flex h-50px">
-				<button onClick={sortNodeNumBtn} className="w-1/2 border h-30px">按节点数量排序</button>
-				<button onClick={sortIndustryNumBtn} className="w-1/2 border h-30px">按黑产数量排序</button>
+		<div className="h-800px">
+			<div className="flex h-30px">
+				<button onClick={sortNodeNumBtn} className="w-1/2 h-30px m-1 border">按节点数量排序</button>
+				<button onClick={sortIndustryNumBtn} className="w-1/2 h-30px m-1 border">按黑产数量排序</button>
 			</div>
-			<div ref={containerRef} className="w-full h-650px"></div>
+			<div ref={containerRef} className="flex h-600px m-1" ></div>
+			<div className="m-1 mt-2 pl-2 flex h-70px border">
+				<div className="w-full h-30px">
+					<span className="font-medium">当前社区：{curCommunity}</span>
+				</div>
+				<div className="w-full h-30px">
+					<span className="font-medium">
+						节点数量：{communityList.find((com) => com.community === curCommunity)?.nodeNum}
+					</span>
+				</div>
+			</div>
+
 		</div>
 	);
 

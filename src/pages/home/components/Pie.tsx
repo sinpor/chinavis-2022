@@ -31,6 +31,19 @@ export const Pie: React.FC = () => {
 		'I': '其他'
 	};
 
+	const industryColor = {
+		'A': '#5470c6',
+		'B': '#91cc75',
+		'C': '#fac858',
+		'D': '#ee6666',
+		'E': '#73c0de',
+		'F': '#3ba272',
+		'G': '#fc8452',
+		'H': '#9a60b4',
+		'I': '#ea7ccc'
+	};
+
+
 	let pieChart;
 
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -38,6 +51,7 @@ export const Pie: React.FC = () => {
 	const [nodes, setNodes] = useState([]);
 
 	const updatePie = useCallback((pie_data: any[]) => {
+
 		pieChart.setOption({
 			series: [
 				{
@@ -145,7 +159,7 @@ export const Pie: React.FC = () => {
 		}
 		Object.keys(count).forEach(key => {
 			pie_data.push(
-				{ name: key, value: count[key] }
+				{ name: key, value: count[key], itemStyle: { color: industryColor[key]} }
 			);
 		});
 		updatePie(pie_data);

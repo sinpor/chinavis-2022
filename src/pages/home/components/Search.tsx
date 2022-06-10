@@ -4,12 +4,15 @@ import { AudioOutlined } from '@ant-design/icons';
 import { request } from "../../../utils/request/request";
 import { httpSearchNode } from "../../../utils/request/httpRequest";
 
+import { observer } from "mobx-react";
 import { store } from "../../../store";
 
 const { Search } = Input;
 
-export const SearchId: React.FC = () => {
-
+export const SearchId: React.FC = observer(() => {
+	
+	// const [curCommunity, setCurCommunity] = useState(-1);
+	
 	let state = true;
 	// 搜索节点（按钮）
 	const onSearch = (value: string) => {
@@ -42,4 +45,4 @@ export const SearchId: React.FC = () => {
 		</Space>
 	)
 
-}
+});
