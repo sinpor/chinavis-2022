@@ -1,10 +1,11 @@
 import { Button, Form, Input, Modal, Space } from 'antd';
-import { useForm } from 'antd/lib/form/Form';
 import { observer } from 'mobx-react';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { StoreContext } from '../../../store';
 import { INodeData } from '../../../types';
 import { NodeTable } from './NodeTable';
+
+const { useForm } = Form;
 
 export const SearchNode = observer((props: { isSearch: boolean }) => {
   const store = useContext(StoreContext);
