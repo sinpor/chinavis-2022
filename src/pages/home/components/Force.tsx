@@ -112,7 +112,7 @@ export const Force: React.FC = observer(() => {
       .force('charge', forceNode)
       .force('x', d3.forceX())
       .force('y', d3.forceY())
-      .force('collision', d3.forceCollide(4))
+      .force('collision', d3.forceCollide(5))
       .alphaDecay(alphaDecay)
       .velocityDecay(0.3);
 
@@ -242,7 +242,7 @@ export const Force: React.FC = observer(() => {
     const coreData = nodes.filter((d) => d.originData.isCore);
 
     //   核心节点
-    const coreNode = nodeG
+    let coreNode = nodeG
       ?.selectAll('use')
       .data(coreData)
       .join('use')
@@ -336,10 +336,10 @@ export const Force: React.FC = observer(() => {
           .join('circle')
           .attr('fill', 'none')
           .attr('stroke', (d) => nodeColorScale(d.originData.label))
-          .attr('stroke-width', 2)
+          .attr('stroke-width', 1)
           .attr('cx', (d) => d?.x || null)
           .attr('cy', (d) => d?.y || null)
-          .style('r', (d) => (nodeSizeScale.current?.(d.originData.weight) as number) + 2) as any;
+          .style('r', (d) => (nodeSizeScale.current?.(d.originData.weight) as number) + 3) as any;
       },
       { fireImmediately: true }
     );
@@ -347,15 +347,17 @@ export const Force: React.FC = observer(() => {
     const clear1 = reaction(
       () => store.appendLinks,
       (val) => {
+        const tempNodes: INode[] = [];
+        const tempLinks: ILink[] = [];
         val.nodes.forEach((d) => {
           if (!nodes.find((d1) => d1.id === d.id)) {
-            nodes.push({ id: d.id as string, originData: d, isAppend: true });
+            tempNodes.push({ id: d.id as string, originData: d, isAppend: true });
           }
         });
 
         val.links.forEach((d) => {
           if (!links.find((d1) => d1.originData.startId === d.startId && d1.originData.endId === d.endId)) {
-            links.push({
+            tempLinks.push({
               source: d.startId,
               target: d.endId,
               originData: d,
@@ -364,8 +366,28 @@ export const Force: React.FC = observer(() => {
           }
         });
 
+        nodes.push(...tempNodes);
+        links.push(...tempLinks);
+
         forceLink.current?.links(links);
-        simulation.current?.nodes(nodes).alphaTarget(0.5).restart();
+        simulation.current?.nodes(nodes).alphaTarget(0.8).restart();
+
+        store.appendCurrentData(
+          tempNodes.map((d) => d.originData),
+          tempLinks.map((d) => d.originData)
+        );
+
+        const useCore = nodes.filter((d) => d.originData.isCore);
+
+        coreNode = nodeG
+          ?.selectAll('use')
+          .data(useCore)
+          .join('use')
+          .attr('xlink:href', '#star')
+          .attr('width', 20)
+          .attr('height', 20)
+          .attr('transform', 'translate(-10, -10)')
+          .attr('fill', (d) => nodeColorScale(d.originData.label));
 
         console.log(simulation.current?.nodes()?.filter((d) => d.isAppend));
       },
@@ -462,7 +484,7 @@ export const Force: React.FC = observer(() => {
           onChangeShow={handleChangeShow}
         />
       ) : null}
-      <div className="right-0 w-200px z-20 absolute">
+      <div className="border rounded-xl bg-cyan-400 bg-opacity-5 border-cyan-200 p-2 right-0 w-200px z-20 absolute">
         <div className="text-gray-500">node strength</div>
         <div className="flex flex-col">
           <span className="text-gray-500"></span>
@@ -487,7 +509,7 @@ export const Force: React.FC = observer(() => {
           />
         </div>
       </div>
-      <div className="p-4 bottom-0 left-0 absolute">
+      <div className="border rounded-xl bg-cyan-400 bg-opacity-5 border-cyan-200 p-2 p-4 bottom-0 left-0 z-1 absolute">
         <div className="font-medium mb-4 text-gray-500">节点图例</div>
         <div className=" grid gap-y-2">
           {nodeTypes.map((n) => (
@@ -509,7 +531,7 @@ export const Force: React.FC = observer(() => {
           </div>
         </div>
       </div>
-      <div className="text-right p-4 right-0 bottom-0 absolute">
+      <div className="border rounded-xl bg-cyan-400 bg-opacity-5 border-cyan-200 text-right p-2 p-4 right-0 bottom-0 z-1 absolute">
         <div className="font-medium mb-4 text-gray-500">连线图例</div>
         <div className="grid text-2xs gap-y-2">
           {linkTypes.map((l) => (

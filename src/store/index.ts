@@ -43,6 +43,12 @@ class Store {
     this.appendLinks = { nodes: [], links: [] };
   }
 
+  // 热更新currentData
+  appendCurrentData(nodes: INodeData[] = [], links: ILinkData[] = []) {
+    this.currentData.nodes?.push(...nodes);
+    this.currentData.links?.push(...links);
+  }
+
   updateSelectedNodes(nodes: number[]) {
     this.selectedNodes = nodes;
   }
