@@ -45,7 +45,16 @@ export const Controls: React.FC = observer(() => {
 			if (!res.error) {
 				if (res.nodes.length) {
 					console.log(res.nodes);
-					const nodeList = nodes.concat(res.nodes);
+					const nodeList = [...nodes];
+					const nodecount = [];
+					for (const node of nodes) {
+						nodecount.push(node.id);
+					}
+					for (const node of res.nodes) {
+						if (nodecount.indexOf(node.id) == -1) {
+							nodeList.push(node);
+						}
+					}
 					const linkList = links.concat(res.links);
 					setNodes(nodeList);
 					setLinks(linkList);
@@ -53,7 +62,7 @@ export const Controls: React.FC = observer(() => {
 				} else {
 					alert("相邻节点已全部获取！");
 				}
-				setSelectedNodes([]);
+				// setSelectedNodes([]);
 			}
 		});
 	}
@@ -86,8 +95,8 @@ export const Controls: React.FC = observer(() => {
 			if (!res.error) {
 				setNodes(nodeList);
 				setLinks(linkList);
+				store.updateSelectedNodes([]);
 				store.updateCurrentData({ nodes: nodeList, links: linkList });
-				setSelectedNodes([]);
 			}
 		});
 	}
@@ -110,7 +119,7 @@ export const Controls: React.FC = observer(() => {
 
 		for (const node of nodes) {
 			if (node.isCore) {
-				nodeIds.push(node.name + '\n' + node.uid);
+				nodeIds.push(node.name + '//\n' + node.uid);
 				coreNodes.push({ id: node.id, linkNodeIds: [] });
 			}
 		}
@@ -165,14 +174,15 @@ export const Controls: React.FC = observer(() => {
 		}
 		httpSetCore({ nodes: coreNodes, isCore: status })?.then(res => {
 			if (!res.error) {
-				// store.updateCurrentData({
-				// 	...store.currentData,
-				// 	nodes: nodes
-				// });
+				store.updateCurrentData({
+					...store.currentData,
+					nodes: [...nodes]
+				});
 			}
 		});
 		// nodes.push({id:1145141919810});
 		setNodes([...nodes]);
+		// setSelectedNodes([]);
 	}
 
 	// 资产标记（按钮）
@@ -209,6 +219,7 @@ export const Controls: React.FC = observer(() => {
 				nodes: res.nodes,
 				links: res.links
 			});
+			store.updateSelectedNodes([]);
 		});
 	}
 
@@ -218,9 +229,11 @@ export const Controls: React.FC = observer(() => {
 		console.log('还没写！！！');
 	}
 
+
 	// 重置所有数据（按钮）
 	const resetAllBtn = () => {
 		httpResetAll().then((res) => {
+			store.updateSelectedNodes([]);
 			store.updateInitData(res);
 		});
 	}

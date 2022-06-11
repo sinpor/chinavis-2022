@@ -10,9 +10,9 @@ import { store } from "../../../store";
 const { Search } = Input;
 
 export const SearchId: React.FC = observer(() => {
-	
+
 	// const [curCommunity, setCurCommunity] = useState(-1);
-	
+
 	let state = true;
 	// 搜索节点（按钮）
 	const onSearch = (value: string) => {
@@ -27,9 +27,16 @@ export const SearchId: React.FC = observer(() => {
 					curCommunity: res.curCommunity,
 					error: res.error
 				})
-				store.updateCurrentData({nodes: res.nodes, links: res.links});
+				store.updateCurrentData({ nodes: res.nodes, links: res.links });
 			}
 			state = true;
+		}).then(res => {
+			for (const node of res.nodes) {
+				if (node.uid === value) {
+					store.updateSelectedNodes([node.uid])
+					break;
+				}
+			}
 		}).catch(r => {
 			state = true;
 		});

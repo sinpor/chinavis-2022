@@ -9,11 +9,12 @@ import { TooltipComponent, GridComponent, LegendComponent, DataZoomComponent } f
 import { BarChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
 import { store } from "../../../store";
+import { observer } from "mobx-react";
 
 echarts.use([TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, BarChart, CanvasRenderer]);
 
 
-export const List: React.FC = () => {
+export const List: React.FC = observer(() => {
 
 	const containerRef = useRef<HTMLDivElement>(null);
 
@@ -245,7 +246,7 @@ export const List: React.FC = () => {
 	}, []);
 
 	// 数据更新（回调）
-	const communityListData = (communityList) => {
+	const communityListData = useCallback((communityList) => {
 		const name = [];
 		const comNum = [];
 		const crimeNum = [];
@@ -262,7 +263,7 @@ export const List: React.FC = () => {
 			allCom: comNum,
 			crimeCom: crimeNum
 		});
-	}
+	}, []);
 
 	// 按节点数量排序
 	const sortNodeNumBtn = () => {
@@ -306,7 +307,7 @@ export const List: React.FC = () => {
 				</div>
 				<div className="w-full h-30px">
 					<span className="font-medium">
-						节点数量：{communityList.find((com) => com.community === curCommunity)?.nodeNum}
+						节点数量：{store?.currentData?.nodes ? [...store?.currentData?.nodes].length : 0}
 					</span>
 				</div>
 			</div>
@@ -328,4 +329,4 @@ export const List: React.FC = () => {
 	// 	</div>
 	// )
 
-};
+});
