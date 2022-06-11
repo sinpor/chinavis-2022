@@ -36,7 +36,7 @@ export const SearchId: React.FC = observer(() => {
 			})
 			.then((res) => {
 				for (const node of res.nodes) {
-					if (node.uid === value) {
+					if (node.uid === nodeUid) {
 						store.updateSelectedNodes([node.uid]);
 						break;
 					}
@@ -65,7 +65,7 @@ export const SearchId: React.FC = observer(() => {
 			})
 			.then((res) => {
 				for (const node of res.nodes) {
-					if (node.uid === value) {
+					if (node.uid === nodeUid) {
 						store.updateSelectedNodes([node.uid]);
 						break;
 					}

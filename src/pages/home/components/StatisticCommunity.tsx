@@ -4,18 +4,29 @@ import { useContext, useMemo } from 'react';
 import { StoreContext } from '../../../store';
 
 export default observer(function StatisticCommunity() {
-  const { curCommunity, communityList } = useContext(StoreContext);
+	
+  const { curCommunity, communityList, currentData } = useContext(StoreContext);
+	
   const currentNodeNum = useMemo(
-    () => (communityList.find((com: any) => com.community === curCommunity) as any)?.nodeNum,
-    [communityList, curCommunity]
+    () => currentData?.nodes?.length,
+    [currentData]
   );
+	
+  const currentLinkNum = useMemo(
+    () => currentData?.links?.length,
+    [currentData]
+  );
+	
   return (
     <div className="flex mx-2 justify-between">
       <div className="">
-        <Statistic title="当前社区" value={curCommunity || ''} groupSeparator="" />
+        <Statistic title="当前社区" value={curCommunity || ''} groupSeparator="" className="text-center" />
       </div>
       <div className="">
-        <Statistic title="节点数量" value={currentNodeNum} />
+        <Statistic title="节点数量" value={currentNodeNum} className="text-center" />
+      </div>
+      <div className="">
+        <Statistic title="边数量" value={currentLinkNum} className="text-center" />
       </div>
     </div>
   );
