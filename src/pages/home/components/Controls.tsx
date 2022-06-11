@@ -275,7 +275,8 @@ export const Controls: React.FC = observer(() => {
 
 	// 重置社区（按钮）
 	const resetCommunityBtn = () => {
-		httpReset(curCommunity)?.then((res) => {
+		httpReset({ community: curCommunity })?.then((res) => {
+			alert('重置成功!');
 			store.updateInitData({
 				...store.initData,
 				nodes: res.nodes,

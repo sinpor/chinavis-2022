@@ -78,8 +78,7 @@ const httpRemoveNodes = (param) => httpRequest('POST', 'removeNodes', param);
 const httpSetCore = (params) => httpRequest('POST', 'setCore', params);
 
 // 保存视图
-// { communityId }
-const httpSaveView = (param) => httpRequest('GET', 'saveView', param);
+const httpSaveView = () => httpRequest('GET', 'saveView');
 
 // 重置社区
 // { communityId }
