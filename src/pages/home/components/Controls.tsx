@@ -294,7 +294,7 @@ export const Controls: React.FC = observer(() => {
   }, [store.selectedNodes]);
 
   function handleHighlight() {
-    console.log('highlight');
+    store.updateHighlightNodes(store.currentData.nodes.filter((d) => store.selectedNodes.includes(d.id as number)));
   }
 
   function handleSubmit() {
@@ -342,9 +342,9 @@ export const Controls: React.FC = observer(() => {
         <Tooltip title="拆分社区">
           <Button icon={<BorderInnerOutlined />} type="link" onClick={expandComBtn}></Button>
         </Tooltip>
-        {/* <Tooltip title="高亮显示">
+        <Tooltip title="记录节点">
           <Button icon={<HighlightOutlined />} type="link" onClick={handleHighlight}></Button>
-        </Tooltip> */}
+        </Tooltip>
         <Tooltip title="重置所有数据">
           <Button icon={<UndoOutlined />} type="link" onClick={resetAllBtn}></Button>
         </Tooltip>
