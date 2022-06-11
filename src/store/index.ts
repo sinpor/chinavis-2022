@@ -15,6 +15,11 @@ class Store {
   //   选中的节点
   selectedNodes: number[] = [];
 
+  //   当前社区id
+  curCommunity = 0;
+
+  communityList: any[] = [];
+
   updateInitData(data: any) {
     this.initData = {
       ...data,
@@ -33,6 +38,14 @@ class Store {
 
   updateSelectedNodes(nodes: number[]) {
     this.selectedNodes = nodes;
+  }
+
+  updateCurCommunity(id: number) {
+    this.curCommunity = id;
+  }
+
+  updateCommunityList(list: any[]) {
+    this.communityList = list;
   }
 }
 

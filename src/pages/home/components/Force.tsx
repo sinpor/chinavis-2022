@@ -338,10 +338,10 @@ export const Force: React.FC = observer(() => {
   );
 
   useEffect(() => {
-    const { clientWidth } = containerRef.current as HTMLDivElement;
+    const { clientWidth, clientHeight } = containerRef.current as HTMLDivElement;
 
-    const SCALE = 3 / 4;
-    const clientHeight = clientWidth * SCALE;
+    // const SCALE = 3 / 4;
+    // const clientHeight = clientWidth * SCALE;
     setBox({ width: clientWidth, height: clientHeight });
   }, []);
 
@@ -398,7 +398,7 @@ export const Force: React.FC = observer(() => {
   }
 
   return (
-    <div ref={containerRef} className="w-full relative">
+    <div ref={containerRef} className="h-full w-full relative">
       {popoverData.show ? (
         <NodePopover
           x={popoverData.x}
