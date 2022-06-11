@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { request } from '../../../utils/request/request';
 import { eventBus } from '../../../utils/bus/bus';
@@ -10,6 +10,8 @@ import { BarChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
 import { store } from '../../../store';
 import { observer } from 'mobx-react';
+import Icon from '@ant-design/icons';
+import { Tooltip, Button } from 'antd';
 
 echarts.use([TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, BarChart, CanvasRenderer]);
 
@@ -217,11 +219,14 @@ export const List: React.FC = observer(() => {
     // 更新当前社区编号
     const updateCurCommunity = (data) => {
       setCurCommunity(data);
+      store.updateCurCommunity(data);
     };
 
     // 更新列表（回调）
-    const updateCommunityList = (communityList: any) => {
-      setCommunityList(communityList.sort((a: any, b: any) => b.nodeNum - a.nodeNum));
+    const updateCommunityList = (communityList) => {
+      const list = communityList.slice().sort((a, b) => b.nodeNum - a.nodeNum);
+      setCommunityList(list);
+      store.updateCommunityList(list);
     };
 
     eventBus.addListener('updateCurCommunity', updateCurCommunity);
@@ -285,40 +290,48 @@ export const List: React.FC = observer(() => {
   }, [curCommunity]);
 
   return (
-    <div className="h-800px">
-      <div className="flex h-30px">
-        <button onClick={sortNodeNumBtn} className="w-1/2 h-30px m-1 border">
-          按节点数量排序
-        </button>
-        <button onClick={sortIndustryNumBtn} className="w-1/2 h-30px m-1 border">
-          按黑产数量排序
-        </button>
-      </div>
-      <div ref={containerRef} className="flex h-600px m-1"></div>
-      <div className="m-1 mt-2 pl-2 flex h-70px border">
-        <div className="w-full h-30px">
-          <span className="font-medium">当前社区：{curCommunity}</span>
+    <div className="flex flex-col h-full">
+      <div className="flex justify-between items-center">
+        <div className="font-medium text-lg">社区列表</div>
+        <div>
+          <Tooltip title="按节点数量排序">
+            <Button
+              icon={
+                <Icon>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 576 512">
+                    <path
+                      fill="currentColor"
+                      d="M416 288h-95.1c-17.67 0-32 14.33-32 32s14.33 32 32 32H416c17.67 0 32-14.33 32-32S433.7 288 416 288zM544 32h-223.1c-17.67 0-32 14.33-32 32s14.33 32 32 32H544c17.67 0 32-14.33 32-32S561.7 32 544 32zM352 416h-32c-17.67 0-32 14.33-32 32s14.33 32 32 32h32c17.67 0 31.1-14.33 31.1-32S369.7 416 352 416zM480 160h-159.1c-17.67 0-32 14.33-32 32s14.33 32 32 32H480c17.67 0 32-14.33 32-32S497.7 160 480 160zM192.4 330.7L160 366.1V64.03C160 46.33 145.7 32 128 32S96 46.33 96 64.03v302L63.6 330.7c-6.312-6.883-14.94-10.38-23.61-10.38c-7.719 0-15.47 2.781-21.61 8.414c-13.03 11.95-13.9 32.22-1.969 45.27l87.1 96.09c12.12 13.26 35.06 13.26 47.19 0l87.1-96.09c11.94-13.05 11.06-33.31-1.969-45.27C224.6 316.8 204.4 317.7 192.4 330.7z"
+                    />
+                  </svg>
+                </Icon>
+              }
+              type="link"
+              ghost
+              onClick={sortNodeNumBtn}
+            ></Button>
+          </Tooltip>
+          <Tooltip title="按黑产数量排序">
+            <Button
+              icon={
+                <Icon>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 576 512">
+                    <path
+                      fill="currentColor"
+                      d="M416 288h-95.1c-17.67 0-32 14.33-32 32s14.33 32 32 32H416c17.67 0 32-14.33 32-32S433.7 288 416 288zM352 416h-32c-17.67 0-32 14.33-32 32s14.33 32 32 32h32c17.67 0 31.1-14.33 31.1-32S369.7 416 352 416zM480 160h-159.1c-17.67 0-32 14.33-32 32s14.33 32 32 32H480c17.67 0 32-14.33 32-32S497.7 160 480 160zM544 32h-223.1c-17.67 0-32 14.33-32 32s14.33 32 32 32H544c17.67 0 32-14.33 32-32S561.7 32 544 32zM151.6 41.95c-12.12-13.26-35.06-13.26-47.19 0l-87.1 96.09C4.475 151.1 5.35 171.4 18.38 183.3c6.141 5.629 13.89 8.414 21.61 8.414c8.672 0 17.3-3.504 23.61-10.39L96 145.9v302C96 465.7 110.3 480 128 480s32-14.33 32-32.03V145.9L192.4 181.3C204.4 194.3 224.6 195.3 237.6 183.3c13.03-11.95 13.9-32.22 1.969-45.27L151.6 41.95z"
+                    />
+                  </svg>
+                </Icon>
+              }
+              type="link"
+              ghost
+              onClick={sortIndustryNumBtn}
+            ></Button>
+          </Tooltip>
         </div>
-        <div className="w-full h-30px">
-          <span className="font-medium">
-            节点数量：{store?.currentData?.nodes ? [...store?.currentData?.nodes].length : 0}
-          </span>
-        </div>
       </div>
+      <div ref={containerRef} className="flex flex-1 m-1"></div>
     </div>
   );
 
-  // return (
-  // 	<div className="h-700px">
-  // 		<div className="flex h-7%">
-  // 			<button onClick={sortNodeNumBtn} className="border h-30px w-1/2">按节点数量排序</button>
-  // 			<button onClick={sortIndustryNumBtn} className="border h-30px w-1/2">按黑产数量排序</button>
-  // 		</div>
-  // 		<ReactEcharts className='border'
-  // 			style={{ height: '93%', width: '100%' }}
-  // 			option={getOption()}
-  // 			onEvents={getClick}
-  // 		/>
-  // 	</div>
-  // )
 });

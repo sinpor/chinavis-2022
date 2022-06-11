@@ -7,6 +7,7 @@ import { List } from './components/List';
 import { SearchId } from './components/Search';
 import { httpInit } from '../../utils/request/httpRequest';
 import { store } from '../../store';
+import StatisticCommunity from './components/StatisticCommunity';
 
 export const Home: React.FC = () => {
   useEffect(() => {
@@ -16,27 +17,32 @@ export const Home: React.FC = () => {
   }, []);
   return (
     <div className="flex h-full">
-      <div className="border mx-2 w-1/6">
-        <div className="border m-2">
-          <SearchId />
+      <div className="flex flex-col mr-4  w-300px">
+        <div className="bg-white rounded-xl mb-4 p-4">
+          <StatisticCommunity />
         </div>
-        <div className="border m-2">
-          <List />
+        <div className="bg-white rounded-xl flex flex-col flex-1 p-4">
+          <div className="mb-4">
+            <SearchId />
+          </div>
+          <div className="flex-1 ">
+            <List />
+          </div>
         </div>
       </div>
-      <div className="border flex-1 mx-2">
-        <div className="border m-2">
+      <div className="bg-white rounded-xl flex flex-col flex-1 min-w-700px p-4">
+        <div className=" ">
           <Controls />
         </div>
-        <div className="border m-2">
+        <div className="flex-1 ">
           <Force />
         </div>
       </div>
-      <div className="border mx-2 w-1/5">
-        <div className="border m-2">
+      <div className="flex flex-col ml-4  w-1/5">
+        <div className="bg-white rounded-xl mb-4 p-4">
           <Pie />
         </div>
-        <div className="border m-2">
+        <div className="bg-white rounded-xl  flex-1 p-4">
           <CoreBar />
         </div>
       </div>
