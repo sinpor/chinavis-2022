@@ -56,7 +56,7 @@ export const Pie: React.FC = observer(() => {
   }, []);
 
   const setHoverEvent = useCallback((count) => {
-    pieChart.on('mouseover', function (params) {
+    pieChart.on('click', function (params) {
       const nodesover = count[params.data.name];
       store.updateSelectedNodes(nodesover);
       console.log(params.data.name);
@@ -127,10 +127,10 @@ export const Pie: React.FC = observer(() => {
 
     window.addEventListener('resize', pieChart.resize);
 
-    pieChart.on('mouseout', function (params) {
-      store.updateSelectedNodes([]);
-      console.log('leave');
-    });
+    // pieChart.on('mouseout', function (params) {
+    //   store.updateSelectedNodes([]);
+    //   console.log('leave');
+    // });
 
     const updatePieData = (nodes_data) => {
       setNodes(nodes_data);
