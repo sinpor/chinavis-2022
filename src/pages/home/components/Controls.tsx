@@ -201,13 +201,16 @@ export const Controls: React.FC = observer(() => {
 			for (const linkNodeId of coreNode.linkNodeIds) {
 				const node = nodes.find((node) => node.id === linkNodeId);
 				const industries = eval(node?.industry);
+				const blackNodes = [];
 				if (industries) {
 					for (const industry of industries) {
 						const el = series[industry.charCodeAt() - 'A'.charCodeAt()];
 						el.data[el.data.length - 1]++;
 					}
+					blackNodes.push(node.id);
 				}
 			}
+			coreNode.linkNodeIds = [...blackNodes];
 		}
 		return { nodeIds: nodeIds, series: series, coreNodes: [...coreNodes] };
 	};
