@@ -1,6 +1,7 @@
 // import request from "request";
 
 // import { eventBus } from '../bus/bus';
+import { ILinkData, INodeData } from '../../types';
 import { request } from './request';
 
 // axios.defaults.baseURL = "http://10.170.47.171:5000/";
@@ -87,12 +88,16 @@ const httpReset = (param) => httpRequest('GET', 'reset', param);
 // 全部重置
 const httpResetAll = () => httpRequest('GET', 'reset/all');
 
+export function findShortestPath(params: { node1Uid: string; node2Uid: string }) {
+  return request.get<{ nodes: INodeData[]; links: ILinkData[] }>('findShortestPath', { params });
+}
+
 export {
   httpRequest,
   httpInit,
   httpSelectCommunity,
   httpSearchNode,
-	httpAddNode,
+  httpAddNode,
   httpExpandNode,
   httpRemoveNodes,
   httpSetCore,

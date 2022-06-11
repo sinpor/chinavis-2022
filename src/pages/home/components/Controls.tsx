@@ -20,8 +20,8 @@ import { ILinkData, INodeData, NodeTypeNames, LinkTypeNames } from '../../../typ
 import {
   FullscreenOutlined,
   DeleteOutlined,
-	DeleteFilled,
-	BulbFilled,
+  DeleteFilled,
+  BulbFilled,
   BulbOutlined,
   EyeInvisibleOutlined,
   SaveOutlined,
@@ -31,6 +31,7 @@ import {
   UndoOutlined,
 } from '@ant-design/icons';
 import { SearchNode } from './SearchNode';
+import { AppendLink } from './AppendLink';
 
 export const Controls: React.FC = observer(() => {
   const store = useContext(StoreContext);
@@ -150,8 +151,6 @@ export const Controls: React.FC = observer(() => {
       }
     });
   };
-
-
 
   // 核心资产数据处理
   const coreBarData = (nodes, links) => {
@@ -357,6 +356,7 @@ export const Controls: React.FC = observer(() => {
       </Input.Group> */}
 
       <Space>
+        <AppendLink />
         <SearchNode isSearch />
         <SearchNode isSearch={false} />
       </Space>
