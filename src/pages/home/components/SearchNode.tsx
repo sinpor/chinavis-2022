@@ -1,4 +1,5 @@
 import { Button, Form, Input, Modal, Space } from 'antd';
+import { useForm } from 'antd/lib/form/Form';
 import { observer } from 'mobx-react';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { StoreContext } from '../../../store';
@@ -7,6 +8,8 @@ import { NodeTable } from './NodeTable';
 
 export const SearchNode = observer((props: { isSearch: boolean }) => {
   const store = useContext(StoreContext);
+
+  const [form] = useForm();
 
   const { currentData, highlightNodes, updateHighlightNodes } = store;
 
@@ -18,6 +21,8 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
 
   const selected = useRef<INodeData[]>([]);
 
+  const [disabled, setDisabled] = useState(true);
+
   useEffect(() => {
     allData.current = props.isSearch ? currentData.nodes : highlightNodes;
     setTableData(allData.current);
@@ -26,7 +31,7 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
   useEffect(() => {
     if (show) return;
     selected.current = [];
-    allData.current = [];
+    handleReset();
   }, [show]);
 
   function onFinish(values: any) {
@@ -39,8 +44,15 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
     );
   }
 
+  function handleReset() {
+    setTableData(allData.current);
+    form.resetFields();
+  }
+
   function handleSelected(e: INodeData[]) {
     selected.current = e;
+
+    setDisabled(!e?.length);
   }
 
   function handleSubmitSelected() {
@@ -54,7 +66,7 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
   return (
     <>
       <Button type="primary" onClick={() => setShow(true)}>
-        {props.isSearch ? '搜索' : '已标记'}
+        {props.isSearch ? '搜索' : '已记录'}
       </Button>
 
       <Modal
@@ -68,7 +80,7 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
         destroyOnClose
       >
         <div className="flex mb-4 justify-between">
-          <Form layout="inline" onFinish={onFinish}>
+          <Form form={form} layout="inline" onFinish={onFinish}>
             <Form.Item name="uid" label="uid">
               <Input placeholder="请输入id" />
             </Form.Item>
@@ -80,26 +92,20 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
               {() => (
                 <Space>
                   <Button type="primary" htmlType="submit">
-                    确认
+                    查询
                   </Button>{' '}
-                  <Button
-                    onClick={() => {
-                      setTableData(allData.current);
-                    }}
-                  >
-                    重置
-                  </Button>
+                  <Button onClick={handleReset}>重置</Button>
                 </Space>
               )}
             </Form.Item>
           </Form>
 
           <Space>
-            <Button type="primary" disabled={!selected.current.length} onClick={handleSubmitSelected}>
+            <Button type="primary" disabled={disabled} onClick={handleSubmitSelected}>
               选中
             </Button>
             {props.isSearch ? (
-              <Button type="default" disabled={!selected.current.length} onClick={handleHighlight}>
+              <Button type="default" disabled={disabled} onClick={handleHighlight}>
                 标记
               </Button>
             ) : null}
