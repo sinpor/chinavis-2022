@@ -7,6 +7,8 @@ import { TooltipComponent, TitleComponent } from 'echarts/components';
 import { PieChart } from 'echarts/charts';
 import { LabelLayout } from 'echarts/features';
 import { CanvasRenderer } from 'echarts/renderers';
+import { store } from "../../../store";
+import { observer } from "mobx-react";
 
 echarts.use([
 	TooltipComponent,
@@ -17,7 +19,7 @@ echarts.use([
 ]);
 
 
-export const Pie: React.FC = () => {
+export const Pie: React.FC = observer(() => {
 
 	const industryName = {
 		'A': '涉黄',
@@ -51,7 +53,6 @@ export const Pie: React.FC = () => {
 	const [nodes, setNodes] = useState([]);
 
 	const updatePie = useCallback((pie_data: any[]) => {
-
 		pieChart.setOption({
 			series: [
 				{
@@ -62,6 +63,26 @@ export const Pie: React.FC = () => {
 			]
 		});
 	}, []);
+
+	const setHoverEvent = useCallback((nodes) => {
+		pieChart.on('mouseover', function(params) {
+			const nodesover = [];
+			console.log(nodes);
+			for (const node in nodes) {
+				// console.log(node);
+				// console.log(node.industry);
+				if (node.industry?.indexOf(params.data.name) !== -1) {
+					nodesover.push(node.id);
+				}
+			}
+			console.log(nodesover)
+			if (nodesover) {
+				store.updateSelectedNodes(nodesover);
+				console.log(params.data.name);
+			}
+		});
+	}, []);
+
 
 	useEffect(() => {
 
@@ -126,10 +147,8 @@ export const Pie: React.FC = () => {
 
 		window.addEventListener('resize', pieChart.resize);
 
-		// pieChart.on('mouseover', function(params) {
-		// 	console.log(params.data.name);
-		// });
 		// pieChart.on('mouseout', function(params) {
+		// store.updateSelectedNodes([nodesover]);
 		// 	console.log('leave');
 		// });
 
@@ -159,13 +178,19 @@ export const Pie: React.FC = () => {
 		}
 		Object.keys(count).forEach(key => {
 			pie_data.push(
-				{ name: key, value: count[key], itemStyle: { color: industryColor[key]} }
+				{ name: key, value: count[key], itemStyle: { color: industryColor[key] } }
 			);
 		});
 		updatePie(pie_data);
 	}, [nodes]);
 
+
+	useEffect(() => {
+		console.log(nodes)
+		setHoverEvent(nodes);
+	}, [nodes]);
+
 	return (
 		<div ref={containerRef} className="w-full h-30vh"></div>
 	);
-};
+});

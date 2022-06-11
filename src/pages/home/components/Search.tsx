@@ -31,6 +31,14 @@ export const SearchId: React.FC = observer(() => {
         }
         state = true;
       })
+      .then((res) => {
+        for (const node of res.nodes) {
+          if (node.uid === value) {
+            store.updateSelectedNodes([node.uid]);
+            break;
+          }
+        }
+      })
       .catch((r) => {
         state = true;
       });
@@ -38,7 +46,7 @@ export const SearchId: React.FC = observer(() => {
 
   return (
     <Space direction="vertical" className="w-full">
-      <Search placeholder="请输入网络资产线索" onSearch={onSearch} style={{ width: '100%' }} enterButton />
+      <Search placeholder="请输入网络资产线索" onSearch={onSearch} style={{ width: '100%' }} />
     </Space>
   );
 });

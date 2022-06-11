@@ -9,17 +9,18 @@ import { TooltipComponent, GridComponent, LegendComponent, DataZoomComponent } f
 import { BarChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
 import { store } from '../../../store';
-import { Button, Space, Statistic, Tooltip } from 'antd';
+import { observer } from 'mobx-react';
 import Icon from '@ant-design/icons';
+import { Tooltip, Button } from 'antd';
 
 echarts.use([TooltipComponent, GridComponent, LegendComponent, DataZoomComponent, BarChart, CanvasRenderer]);
 
-export const List: React.FC = () => {
+export const List: React.FC = observer(() => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [communityData, setCommunityData] = useState({});
 
-  const [communityList, setCommunityList] = useState<any[]>([]);
+  const [communityList, setCommunityList] = useState([]);
 
   const [curCommunity, setCurCommunity] = useState(107);
 
@@ -222,7 +223,7 @@ export const List: React.FC = () => {
     };
 
     // 更新列表（回调）
-    const updateCommunityList = (communityList: any[]) => {
+    const updateCommunityList = (communityList) => {
       const list = communityList.slice().sort((a, b) => b.nodeNum - a.nodeNum);
       setCommunityList(list);
       store.updateCommunityList(list);
@@ -241,7 +242,7 @@ export const List: React.FC = () => {
   }, []);
 
   // 数据更新（回调）
-  const communityListData = (communityList) => {
+  const communityListData = useCallback((communityList) => {
     const name = [];
     const comNum = [];
     const crimeNum = [];
@@ -258,12 +259,7 @@ export const List: React.FC = () => {
       allCom: comNum,
       crimeCom: crimeNum,
     });
-  };
-
-  const currentNodeNum = useMemo(
-    () => (communityList.find((com: any) => com.community === curCommunity) as any)?.nodeNum,
-    [communityList]
-  );
+  }, []);
 
   // 按节点数量排序
   const sortNodeNumBtn = () => {
@@ -351,4 +347,4 @@ export const List: React.FC = () => {
   // 		/>
   // 	</div>
   // )
-};
+});
