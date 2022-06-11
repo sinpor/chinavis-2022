@@ -255,10 +255,10 @@ export const Controls: React.FC = observer(() => {
     httpSaveView()?.then((res) => {
       if (!res.error) {
         alert('保存成功!');
-        store.updateInitData({
-          ...store.initData,
-          communitiesInfo: res.communitiesInfo,
-        });
+        // store.updateInitData({
+        //   ...store.initData,
+        //   communitiesInfo: res.communitiesInfo,
+        // });
       }
     });
   };
