@@ -35,10 +35,12 @@ const nodeTypes = ['Domain', 'IP', 'Cert', 'Whois_Name', 'Whois_Phone', 'Whois_E
 
 interface INode extends SimulationNodeDatum {
   id: string;
+  isAppend?: boolean;
   originData: INodeData;
 }
 
 interface ILink extends SimulationLinkDatum<INode> {
+  isAppend?: boolean;
   originData: ILinkData;
 }
 
@@ -121,230 +123,262 @@ export const Force: React.FC = observer(() => {
     return { forceNode, forceLink, simulation };
   }, []);
 
-  const initChart = useCallback(
-    (nodes: INode[], links: ILink[]) => {
-      simulation.current?.on('tick', ticked);
+  const initChart = useCallback(() => {
+    const nodes = simulation.current?.nodes() || [];
+    const links = forceLink.current?.links() || [];
 
-      const { width, height } = box;
+    simulation.current?.on('tick', ticked);
 
-      svg.current?.html('');
+    const { width, height } = box;
 
-      svg.current?.attr('style', 'max-width: 100%; height: auto; height: intrinsic;');
+    svg.current?.html('');
 
-      const globalG = svg.current?.append('g').attr('transform', `translate(${width / 2}, ${height / 2})`);
+    svg.current?.attr('style', 'max-width: 100%; height: auto; height: intrinsic;');
 
-      const nodeG = globalG?.append('g');
+    const globalG = svg.current?.append('g').attr('transform', `translate(${width / 2}, ${height / 2})`);
 
-      //   const dragRect = globalG
-      //     ?.append('rect')
-      //     .attr('x', -width / 2)
-      //     .attr('y', -height / 2)
-      //     .attr('width', width)
-      //     .attr('height', height)
-      //     .attr('fill', 'transparent');
+    const nodeG = globalG?.append('g');
 
-      const canvas = containerRef.current?.querySelector('canvas');
-      const context = canvasContext.current || canvas?.getContext('2d');
-      canvasContext.current = context as CanvasRenderingContext2D;
-      (canvas as HTMLCanvasElement).width = width;
-      (canvas as HTMLCanvasElement).height = height;
+    //   const dragRect = globalG
+    //     ?.append('rect')
+    //     .attr('x', -width / 2)
+    //     .attr('y', -height / 2)
+    //     .attr('width', width)
+    //     .attr('height', height)
+    //     .attr('fill', 'transparent');
 
-      //   const width = canvas.width;
-      //   const height = canvas.height;
+    const canvas = containerRef.current?.querySelector('canvas');
+    const context = canvasContext.current || canvas?.getContext('2d');
+    canvasContext.current = context as CanvasRenderingContext2D;
+    (canvas as HTMLCanvasElement).width = width;
+    (canvas as HTMLCanvasElement).height = height;
 
-      const selectedG = globalG?.append('g').classed('selectedG', true);
+    //   const width = canvas.width;
+    //   const height = canvas.height;
 
-      let selectedCircle: Selection<SVGCircleElement, INode, SVGGElement, any>;
+    const selectedG = globalG?.append('g').classed('selectedG', true);
 
-      globalG
-        ?.append('g')
-        .classed('brushG', true)
-        .attr('transform', `translate(${-width / 2}, ${-height / 2})`)
-        .call(
-          d3
-            .brush()
-            .filter(() => {
-              const node = simulation.current?.find(d3.event.offsetX, d3.event.offsetY, 10) as INode;
-              return !node;
-            })
-            .on('start', () => {
-              simulation.current?.stop();
-            })
-            .on('brush', () => {
-              //   console.log(d3.event);
-              //   console.log(d3.event);
-            })
-            .on('end', () => {
-              const selection = d3.event.selection;
-              if (!selection) {
-                simulation.current?.alphaTarget(0.5).restart();
-                updateSelectedNodes([]);
-                return;
-              }
+    let selectedCircle: Selection<SVGCircleElement, INode, SVGGElement, any>;
 
-              const useData = nodes
-                .filter(
-                  (d) =>
-                    (d.x as number) >= selection[0][0] - width / 2 &&
-                    (d.x as number) <= selection[1][0] - width / 2 &&
-                    (d.y as number) >= selection[0][1] - height / 2 &&
-                    (d.y as number) <= selection[1][1] - height / 2
-                )
-                .map((d) => d.originData.id);
+    globalG
+      ?.append('g')
+      .classed('brushG', true)
+      .attr('transform', `translate(${-width / 2}, ${-height / 2})`)
+      .call(
+        d3
+          .brush()
+          .filter(() => {
+            const node = simulation.current?.find(d3.event.offsetX, d3.event.offsetY, 10) as INode;
+            return !node;
+          })
+          .on('start', () => {
+            simulation.current?.stop();
+          })
+          .on('brush', () => {
+            //   console.log(d3.event);
+            //   console.log(d3.event);
+          })
+          .on('end', () => {
+            const selection = d3.event.selection;
+            if (!selection) {
+              simulation.current?.alphaTarget(0.5).restart();
+              updateSelectedNodes([]);
+              return;
+            }
 
-              updateSelectedNodes(useData as number[]);
-            })
-        )
-        .on('mousemove', () => {
-          const { offsetX, offsetY } = d3.event;
-          const data = simulation.current?.find(offsetX - width / 2, offsetY - height / 2, 5);
+            const useData = nodes
+              .filter(
+                (d) =>
+                  (d.x as number) >= selection[0][0] - width / 2 &&
+                  (d.x as number) <= selection[1][0] - width / 2 &&
+                  (d.y as number) >= selection[0][1] - height / 2 &&
+                  (d.y as number) <= selection[1][1] - height / 2
+              )
+              .map((d) => d.originData.id);
 
-          if (!data) {
-            overlay?.attr('cursor', 'crosshair');
+            updateSelectedNodes(useData as number[]);
+          })
+      )
+      .on('mousemove', () => {
+        const { offsetX, offsetY } = d3.event;
+        const data = simulation.current?.find(offsetX - width / 2, offsetY - height / 2, 5);
 
-            clearTimeout(timer);
-            timer = setTimeout(() => {
-              setPopoverData((prev) => {
-                return { ...prev, show: false };
-              });
-            }, 50);
-            return;
-          }
+        if (!data) {
+          overlay?.attr('cursor', 'crosshair');
 
-          overlay?.attr('cursor', 'default');
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            setPopoverData((prev) => {
+              return { ...prev, show: false };
+            });
+          }, 50);
+          return;
+        }
 
-          setPopoverData({
-            x: offsetX,
-            y: offsetY,
-            show: true,
-            data: data.originData,
-          });
-        })
-        .on('click', () => {
-          const { offsetX, offsetY } = d3.event;
-          const data = simulation.current?.find(offsetX - width / 2, offsetY - height / 2, 5);
+        overlay?.attr('cursor', 'default');
 
-          if (data) {
-            updateSelectedNodes([data.originData.id as number]);
+        setPopoverData({
+          x: offsetX,
+          y: offsetY,
+          show: true,
+          data: data.originData,
+        });
+      })
+      .on('click', () => {
+        const { offsetX, offsetY } = d3.event;
+        const data = simulation.current?.find(offsetX - width / 2, offsetY - height / 2, 5);
+
+        if (data) {
+          updateSelectedNodes([data.originData.id as number]);
+        }
+      });
+
+    const overlay = globalG?.select('g.brushG rect.overlay');
+
+    overlay?.call(
+      d3.drag().subject(dragsubject).on('start', dragstarted).on('drag', dragged).on('end', dragended) as any
+    );
+
+    const coreData = nodes.filter((d) => d.originData.isCore);
+
+    //   核心节点
+    const coreNode = nodeG
+      ?.selectAll('use')
+      .data(coreData)
+      .join('use')
+      .attr('xlink:href', '#star')
+      .attr('width', 20)
+      .attr('height', 20)
+      .attr('transform', 'translate(-10, -10)')
+      .attr('fill', (d) => nodeColorScale(d.originData.label));
+
+    function ticked() {
+      context?.clearRect(0, 0, width, height);
+      context?.save();
+      context?.translate(width / 2, height / 2);
+
+      links.forEach(drawLink);
+      nodes.forEach(drawNode);
+
+      context?.restore();
+
+      coreNode?.attr('x', (d) => d?.x || 0).attr('y', (d) => d?.y || 0);
+
+      selectedCircle?.style('cx', (d) => d.x || 0).style('cy', (d) => d.y || 0);
+    }
+
+    function dragsubject(): INode {
+      return simulation.current?.find(d3.event.x - width / 2, d3.event.y - height / 2, 10) as INode;
+    }
+
+    function dragstarted() {
+      if (!d3.event.active) simulation.current?.alphaTarget(0.3).restart();
+      d3.event.subject.fx = d3.event.subject.x;
+      d3.event.subject.fy = d3.event.subject.y;
+    }
+
+    function dragged() {
+      d3.event.subject.fx = d3.event.x;
+      d3.event.subject.fy = d3.event.y;
+    }
+
+    function dragended() {
+      if (!d3.event.active) simulation.current?.alphaTarget(0);
+      d3.event.subject.fx = null;
+      d3.event.subject.fy = null;
+    }
+
+    function drawLink(d: ILink) {
+      context?.beginPath();
+      context?.save();
+      (context as CanvasRenderingContext2D).strokeStyle = linkColorScale(d.originData.type);
+      context?.moveTo((d.source as INode).x || 0, (d.source as INode).y || 0);
+      context?.lineTo((d.target as INode).x || 0, (d.target as INode).y || 0);
+      context?.stroke();
+      context?.restore();
+    }
+
+    function drawNode(d: INode) {
+      context?.beginPath();
+      context?.save();
+      (context as CanvasRenderingContext2D).fillStyle = d.originData.isCore
+        ? ' rgba(0,0,0,0)'
+        : nodeColorScale(d.originData.label);
+
+      if (d.isAppend) (context as CanvasRenderingContext2D).strokeStyle = '#9bf80c';
+
+      context?.moveTo((d?.x || 0) + 3, d?.y || 0);
+      context?.arc(
+        d?.x || 0,
+        d?.y || 0,
+        d.originData.isCore ? 10 : (nodeSizeScale.current(d.originData.weight) as number),
+        0,
+        2 * Math.PI
+      );
+      context?.fill();
+
+      if (d.isAppend) context?.stroke();
+
+      context?.restore();
+    }
+
+    const clear = reaction(
+      () => store.selectedNodes,
+      (val) => {
+        const selecteds = nodes.filter((d) => val?.includes(d.originData.id as number));
+
+        simulation.current?.alphaTarget(0.3).restart;
+
+        selectedCircle = selectedG
+          ?.html('')
+          .selectAll('circle')
+          .data(selecteds)
+          .join('circle')
+          .attr('fill', 'none')
+          .attr('stroke', (d) => nodeColorScale(d.originData.label))
+          .attr('stroke-width', 2)
+          .attr('cx', (d) => d?.x || null)
+          .attr('cy', (d) => d?.y || null)
+          .style('r', (d) => (nodeSizeScale.current?.(d.originData.weight) as number) + 2) as any;
+      },
+      { fireImmediately: true }
+    );
+
+    const clear1 = reaction(
+      () => store.appendLinks,
+      (val) => {
+        val.nodes.forEach((d) => {
+          if (!nodes.find((d1) => d1.id === d.id)) {
+            nodes.push({ id: d.id as string, originData: d, isAppend: true });
           }
         });
 
-      const overlay = globalG?.select('g.brushG rect.overlay');
+        val.links.forEach((d) => {
+          if (!links.find((d1) => d1.originData.startId === d.startId && d1.originData.endId === d.endId)) {
+            links.push({
+              source: d.startId,
+              target: d.endId,
+              originData: d,
+              isAppend: true,
+            });
+          }
+        });
 
-      overlay?.call(
-        d3.drag().subject(dragsubject).on('start', dragstarted).on('drag', dragged).on('end', dragended) as any
-      );
+        forceLink.current?.links(links);
+        simulation.current?.nodes(nodes).alphaTarget(0.5).restart();
 
-      const coreData = nodes.filter((d) => d.originData.isCore);
+        console.log(simulation.current?.nodes()?.filter((d) => d.isAppend));
+      },
+      { fireImmediately: true }
+    );
 
-      //   核心节点
-      const coreNode = nodeG
-        ?.selectAll('use')
-        .data(coreData)
-        .join('use')
-        .attr('xlink:href', '#star')
-        .attr('width', 20)
-        .attr('height', 20)
-        .attr('transform', 'translate(-10, -10)')
-        .attr('fill', (d) => nodeColorScale(d.originData.label));
-
-      function ticked() {
-        context?.clearRect(0, 0, width, height);
-        context?.save();
-        context?.translate(width / 2, height / 2);
-
-        links.forEach(drawLink);
-        nodes.forEach(drawNode);
-
-        context?.restore();
-
-        coreNode?.attr('x', (d) => d?.x || 0).attr('y', (d) => d?.y || 0);
-
-        selectedCircle?.style('cx', (d) => d.x || 0).style('cy', (d) => d.y || 0);
-      }
-
-      function dragsubject(): INode {
-        return simulation.current?.find(d3.event.x - width / 2, d3.event.y - height / 2, 10) as INode;
-      }
-
-      function dragstarted() {
-        if (!d3.event.active) simulation.current?.alphaTarget(0.3).restart();
-        d3.event.subject.fx = d3.event.subject.x;
-        d3.event.subject.fy = d3.event.subject.y;
-      }
-
-      function dragged() {
-        d3.event.subject.fx = d3.event.x;
-        d3.event.subject.fy = d3.event.y;
-      }
-
-      function dragended() {
-        if (!d3.event.active) simulation.current?.alphaTarget(0);
-        d3.event.subject.fx = null;
-        d3.event.subject.fy = null;
-      }
-
-      function drawLink(d: ILink) {
-        context?.beginPath();
-        context?.save();
-        (context as CanvasRenderingContext2D).strokeStyle = linkColorScale(d.originData.type);
-        context?.moveTo((d.source as INode).x || 0, (d.source as INode).y || 0);
-        context?.lineTo((d.target as INode).x || 0, (d.target as INode).y || 0);
-        context?.stroke();
-        context?.restore();
-      }
-
-      function drawNode(d: INode) {
-        context?.beginPath();
-        context?.save();
-        (context as CanvasRenderingContext2D).fillStyle = d.originData.isCore
-          ? ' rgba(0,0,0,0)'
-          : nodeColorScale(d.originData.label);
-
-        // (context as CanvasRenderingContext2D).strokeStyle = '#f00';
-        context?.moveTo((d?.x || 0) + 3, d?.y || 0);
-        context?.arc(
-          d?.x || 0,
-          d?.y || 0,
-          d.originData.isCore ? 10 : (nodeSizeScale.current(d.originData.weight) as number),
-          0,
-          2 * Math.PI
-        );
-        context?.fill();
-        // if (selectedNodesRef.current?.includes(d.originData.id as number)) context?.stroke();
-        context?.restore();
-      }
-
-      const clear = reaction(
-        () => store.selectedNodes,
-        (val) => {
-          const selecteds = nodes.filter((d) => val?.includes(d.originData.id as number));
-
-          simulation.current?.alphaTarget(0.3).restart;
-
-          selectedCircle = selectedG
-            ?.html('')
-            .selectAll('circle')
-            .data(selecteds)
-            .join('circle')
-            .attr('fill', 'none')
-            .attr('stroke', (d) => nodeColorScale(d.originData.label))
-            .attr('stroke-width', 2)
-            .attr('cx', (d) => d?.x || null)
-            .attr('cy', (d) => d?.y || null)
-            .style('r', (d) => (nodeSizeScale.current?.(d.originData.weight) as number) + 2) as any;
-        },
-        { fireImmediately: true }
-      );
-
-      return () => {
-        clear();
-        simulation.current?.on('tick', null);
-        context?.clearRect(0, 0, width, height);
-      };
-    },
-    [box]
-  );
+    return () => {
+      clear();
+      clear1();
+      simulation.current?.on('tick', null);
+      context?.clearRect(0, 0, width, height);
+    };
+  }, [box]);
 
   useEffect(() => {
     const { clientWidth, clientHeight } = containerRef.current as HTMLDivElement;
@@ -379,7 +413,7 @@ export const Force: React.FC = observer(() => {
 
         forceNode.current.strength(nodeStrength);
 
-        const clear = initChart(useNodes, useLinks);
+        const clear = initChart();
 
         setNodes(useNodes);
         setLinks(useLinks);
