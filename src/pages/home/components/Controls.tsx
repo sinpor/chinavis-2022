@@ -47,11 +47,20 @@ export const Controls: React.FC = observer(() => {
 					console.log(res.nodes);
 					const nodeList = [...nodes];
 					const nodecount = [];
+					console.log(nodeList);
 					for (const node of nodes) {
+						if (node.uid === 'Domain_807a8a1a5282607c2063a5b0365268b25f0f62d61741a3e25244840595f10dc3') {
+							console.log("321321", node.id);
+						}
 						nodecount.push(node.id);
 					}
+					console.log(nodecount);
 					for (const node of res.nodes) {
-						if (nodecount.indexOf(node.id) == -1) {
+						if (node.uid === 'Domain_807a8a1a5282607c2063a5b0365268b25f0f62d61741a3e25244840595f10dc3') {
+							console.log("77777", node.id);
+							console.log(nodecount.indexOf(node.id));
+						}
+						if (nodecount.indexOf(node.id) === -1) {
 							nodeList.push(node);
 						}
 					}
