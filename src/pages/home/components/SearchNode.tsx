@@ -63,6 +63,10 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
   function handleHighlight() {
     updateHighlightNodes(selected.current);
   }
+
+  function handleClear() {
+    updateHighlightNodes([]);
+  }
   return (
     <>
       <Button type="primary" onClick={() => setShow(true)}>
@@ -107,6 +111,11 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
             {props.isSearch ? (
               <Button type="default" disabled={disabled} onClick={handleHighlight}>
                 标记
+              </Button>
+            ) : null}
+            {!props.isSearch ? (
+              <Button type="default" danger disabled={disabled} onClick={handleClear}>
+                清除
               </Button>
             ) : null}
           </Space>
