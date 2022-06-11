@@ -22,6 +22,8 @@ class Store {
 
   highlightNodes: INodeData[] = [];
 
+  appendLinks: IForceData = { nodes: [], links: [] };
+
   updateInitData(data: any) {
     this.initData = {
       ...data,
@@ -36,6 +38,9 @@ class Store {
       ...data,
       nodes: data.nodes?.map((d: INodeData) => ({ ...d, industry: getIndustry(d.industry as any) })),
     };
+
+    // 社区数据更新后，手动添加的节点清理掉
+    this.appendLinks = { nodes: [], links: [] };
   }
 
   updateSelectedNodes(nodes: number[]) {
@@ -52,6 +57,10 @@ class Store {
 
   updateHighlightNodes(list: INodeData[]) {
     this.highlightNodes = list;
+  }
+
+  updateAppendLinks(data: IForceData) {
+    this.appendLinks = data;
   }
 }
 
