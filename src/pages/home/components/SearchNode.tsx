@@ -1,9 +1,10 @@
-import { Button, Form, Input, Modal, Space } from 'antd';
+import { Button, Form, Input, message, Modal, Space } from 'antd';
 import { observer } from 'mobx-react';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { StoreContext } from '../../../store';
 import { INodeData } from '../../../types';
 import { NodeTable } from './NodeTable';
+import { uniqBy } from 'lodash-es';
 
 const { useForm } = Form;
 
@@ -62,7 +63,8 @@ export const SearchNode = observer((props: { isSearch: boolean }) => {
   }
 
   function handleHighlight() {
-    updateHighlightNodes(selected.current);
+    updateHighlightNodes(uniqBy([...highlightNodes, ...selected.current], 'id'));
+    message.success('标记成功');
   }
 
   function handleClear() {
