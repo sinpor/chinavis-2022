@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import { industryType, IndustryType, IndustryTypeNames } from '../types';
 
-const industryColor = d3.schemeRdGy[9];
+const industryColor = d3.schemeRdBu[10];
 
 const industryColorScale = d3.scaleOrdinal(industryType, industryColor);
 
