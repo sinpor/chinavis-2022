@@ -28,6 +28,7 @@ import {
   HighlightOutlined,
   UndoOutlined,
 } from '@ant-design/icons';
+import { SearchNode } from './SearchNode';
 
 export const Controls: React.FC = observer(() => {
   const store = useContext(StoreContext);
@@ -308,12 +309,17 @@ export const Controls: React.FC = observer(() => {
 
   return (
     <div className="flex justify-between">
-      <Input.Group compact className="whitespace-nowrap">
+      {/* <Input.Group compact className="whitespace-nowrap">
         <Input style={{ width: '150px' }} value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
         <Button onClick={handleSubmit} type="primary">
           Submit
         </Button>
-      </Input.Group>
+      </Input.Group> */}
+
+      <Space>
+        <SearchNode isSearch />
+        <SearchNode isSearch={false} />
+      </Space>
       <Space>
         <Tooltip title="节点扩张">
           <Button icon={<FullscreenOutlined />} type="link" onClick={expandNodeBtn}></Button>
@@ -336,9 +342,9 @@ export const Controls: React.FC = observer(() => {
         <Tooltip title="拆分社区">
           <Button icon={<BorderInnerOutlined />} type="link" onClick={expandComBtn}></Button>
         </Tooltip>
-        <Tooltip title="高亮显示">
+        {/* <Tooltip title="高亮显示">
           <Button icon={<HighlightOutlined />} type="link" onClick={handleHighlight}></Button>
-        </Tooltip>
+        </Tooltip> */}
         <Tooltip title="重置所有数据">
           <Button icon={<UndoOutlined />} type="link" onClick={resetAllBtn}></Button>
         </Tooltip>

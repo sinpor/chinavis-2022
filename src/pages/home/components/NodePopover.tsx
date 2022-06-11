@@ -1,5 +1,6 @@
 import { Tag } from 'antd';
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
+import { useUpdatePosition } from '../../../hooks/utils';
 import { INodeData, NodeTypeNames } from '../../../types';
 import { getIndustryColor, getIndustryNames } from '../../../utils/utils';
 
@@ -11,8 +12,13 @@ export const NodePopover: React.FC<{
   onChangeShow?: (show: boolean) => void;
 }> = ({ x, y, show, nodeData, onChangeShow }) => {
   const industryNames = useMemo(() => getIndustryNames(nodeData.industry), [nodeData.industry]);
+
+  const ele = useRef<HTMLDivElement>(null);
+
+  useUpdatePosition(ele, x, y);
   return (
     <div
+      ref={ele}
       className={`m-2 absolute min-w-200px max-w-400px bg-blue-200 bg-opacity-80 p-4 rounded-md border-solid border border-blue-200 break-words z-99 transition-all duration-300 ${
         !show ? ' hidden' : ''
       }`}
