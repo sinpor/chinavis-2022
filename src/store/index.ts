@@ -5,8 +5,8 @@ import { getIndustry } from '../utils/utils';
 
 class Store {
   constructor() {
-    makeAutoObservable(this);
-    this.updateSelectedNodes = this.updateSelectedNodes.bind(this);
+    makeAutoObservable(this, {}, { autoBind: true });
+    // this.updateSelectedNodes = this.updateSelectedNodes.bind(this);
   }
   initData: any = {};
 
@@ -19,6 +19,8 @@ class Store {
   curCommunity = 0;
 
   communityList: any[] = [];
+
+  highlightNodes: INodeData[] = [];
 
   updateInitData(data: any) {
     this.initData = {
@@ -46,6 +48,10 @@ class Store {
 
   updateCommunityList(list: any[]) {
     this.communityList = list;
+  }
+
+  updateHighlightNodes(list: INodeData[]) {
+    this.highlightNodes = list;
   }
 }
 
