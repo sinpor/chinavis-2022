@@ -83,6 +83,10 @@ export const Force: React.FC = observer(() => {
 
   const [nodeStrength, setNodeStrength] = useState(-5);
 
+  const [alphaDecay, setAlphaDecay] = useState(0.0028);
+
+  const [linkDistance, setLinkDistance] = useState(40);
+
   const [popoverData, setPopoverData] = useState<{ x: number; y: number; data: INodeData; show: boolean }>({
     show: false,
     x: 0,
@@ -93,8 +97,12 @@ export const Force: React.FC = observer(() => {
   const init = useCallback((nodes: INode[], links: ILink[]) => {
     svg.current = d3.select(containerRef.current).select('svg.force');
 
-    const forceNode = d3.forceManyBody<INode>();
-    const forceLink = d3.forceLink<INode, ILink>(links).id((d) => d.id);
+    const forceNode = d3.forceManyBody<INode>().strength(nodeStrength);
+
+    const forceLink = d3
+      .forceLink<INode, ILink>(links)
+      .id((d) => d.id)
+      .distance(linkDistance);
 
     const simulation = d3
       .forceSimulation(nodes)
@@ -102,8 +110,9 @@ export const Force: React.FC = observer(() => {
       .force('charge', forceNode)
       .force('x', d3.forceX())
       .force('y', d3.forceY())
-      .alphaDecay(0.01);
-    //   .velocityDecay(0.3);
+      .force('collision', d3.forceCollide(4))
+      .alphaDecay(alphaDecay)
+      .velocityDecay(0.3);
 
     nodeSizeScale.current = nodeSizeScale.current
       .domain(d3.extent(nodes.map((d) => d.originData.weight)) as number[])
@@ -388,6 +397,17 @@ export const Force: React.FC = observer(() => {
     simulation.current?.alphaTarget(0.5).restart();
   }
 
+  //   function handleChangeAlphaDecay(val: number) {
+  //     setAlphaDecay(val);
+  //     simulation.current?.alphaDecay(val).alphaTarget(0.3).restart();
+  //   }
+
+  function handleChangeLinkDistance(val: number) {
+    setLinkDistance(val);
+    forceLink.current?.distance(val);
+    simulation.current?.alphaTarget(0.3).restart();
+  }
+
   function handleChangeShow(show: boolean) {
     clearTimeout(timer);
     timer = setTimeout(() => {
@@ -409,8 +429,29 @@ export const Force: React.FC = observer(() => {
         />
       ) : null}
       <div className="right-0 w-200px z-20 absolute">
-        <div className="text-gray-500">节点力</div>
-        <Slider min={-20} max={-2} value={nodeStrength} onChange={handleChangeStrength} />
+        <div className="text-gray-500">node strength</div>
+        <div className="flex flex-col">
+          <span className="text-gray-500"></span>
+          <Slider
+            className="flex-1"
+            min={-40}
+            max={-1}
+            value={nodeStrength}
+            onChange={handleChangeStrength}
+            tooltipVisible={false}
+          />
+        </div>
+        <div className="flex flex-col">
+          <span className="text-gray-500">link distance</span>
+          <Slider
+            min={1}
+            max={100}
+            step={1}
+            value={linkDistance}
+            onChange={handleChangeLinkDistance}
+            tooltipVisible={false}
+          />
+        </div>
       </div>
       <div className="p-4 bottom-0 left-0 absolute">
         <div className="font-medium mb-4 text-gray-500">节点图例</div>
