@@ -130,7 +130,7 @@ export const Controls: React.FC = observer(() => {
 
     for (const node of nodes) {
       if (node.isCore) {
-        nodeIds.push(node.name + '//\n' + node.uid);
+        nodeIds.push(`${node.id}-${node.name}\n${node.uid}`);
         coreNodes.push({ id: node.id, linkNodeIds: [] });
       }
     }
@@ -158,7 +158,7 @@ export const Controls: React.FC = observer(() => {
         }
       }
     }
-    return { nodeIds: nodeIds, series: series };
+    return { nodeIds: nodeIds, series: series, coreNodes: [...coreNodes] };
   };
 
   // 变更资产标记状态
