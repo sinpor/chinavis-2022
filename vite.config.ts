@@ -10,7 +10,8 @@ export default defineConfig({
     proxy: {
       // 正则表达式写法
       '/api/': {
-        target: 'http://chinavis2022.vaiwan.com/',
+        target: 'http://localhost:5000/',
+        // target: 'http://chinavis2022.vaiwan.com/',
         // target: 'http://10.170.47.171:5000/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),

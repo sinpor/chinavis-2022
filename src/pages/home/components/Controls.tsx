@@ -249,7 +249,7 @@ export const Controls: React.FC = observer(() => {
     for (const node of nodes) {
       node.community = curCommunity;
     }
-    httpSaveView({ community: curCommunity })?.then((res) => {
+    httpSaveView()?.then((res) => {
       if (!res.error) {
         alert('保存成功!');
         store.updateInitData({
