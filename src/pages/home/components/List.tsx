@@ -307,7 +307,6 @@ export const List: React.FC = observer(() => {
                 </Icon>
               }
               type="link"
-              ghost
               onClick={sortNodeNumBtn}
             ></Button>
           </Tooltip>
@@ -324,7 +323,6 @@ export const List: React.FC = observer(() => {
                 </Icon>
               }
               type="link"
-              ghost
               onClick={sortIndustryNumBtn}
             ></Button>
           </Tooltip>
@@ -333,5 +331,4 @@ export const List: React.FC = observer(() => {
       <div ref={containerRef} className="flex flex-1 m-1"></div>
     </div>
   );
-
 });
