@@ -71,8 +71,8 @@ export const Controls: React.FC = observer(() => {
             }
           }
           const linkList = links.concat(res.links);
-          setNodes(nodeList);
-          setLinks(linkList);
+          // setNodes(nodeList);
+          // setLinks(linkList);
           store.updateCurrentData({ nodes: nodeList, links: linkList });
         } else {
           alert('相邻节点已全部获取！');
@@ -107,15 +107,15 @@ export const Controls: React.FC = observer(() => {
     }
     httpRemoveNodes({ nodes: selectedNodes })?.then((res) => {
       if (!res.error) {
-        setNodes(nodeList);
-        setLinks(linkList);
+        // setNodes(nodeList);
+        // setLinks(linkList);
         store.updateSelectedNodes([]);
         store.updateCurrentData({ nodes: nodeList, links: linkList });
       }
     });
   };
 
-  // 移除节点（按钮）
+  // 移除其它节点（按钮）
   const deRemoveNodesBtn = () => {
     if (!selectedNodes) {
       alert('尚未选择节点！');
@@ -127,10 +127,13 @@ export const Controls: React.FC = observer(() => {
     }
     const nodeList = [];
     const linkList = [];
+		const removeList = [];
     for (const node of nodes) {
       if (selectedNodes.includes(node.id)) {
         nodeList.push(node);
-      }
+      } else {
+				removeList.push(node.id);
+			}
     }
     const temp = selectedNodes[0];
     for (const link of links) {
@@ -138,10 +141,10 @@ export const Controls: React.FC = observer(() => {
         linkList.push(link);
       }
     }
-    httpRemoveNodes({ nodes: selectedNodes })?.then((res) => {
+    httpRemoveNodes({ nodes: removeList })?.then((res) => {
       if (!res.error) {
-        setNodes(nodeList);
-        setLinks(linkList);
+        // setNodes(nodeList);
+        // setLinks(linkList);
         store.updateSelectedNodes([]);
         store.updateCurrentData({ nodes: nodeList, links: linkList });
       }
@@ -187,7 +190,7 @@ export const Controls: React.FC = observer(() => {
       }
       for (const linkNodeId of coreNode.linkNodeIds) {
         const node = nodes.find((node) => node.id === linkNodeId);
-        const industries = eval(node.industry);
+        const industries = eval(node?.industry);
         if (industries) {
           for (const industry of industries) {
             const el = series[industry.charCodeAt() - 'A'.charCodeAt()];
