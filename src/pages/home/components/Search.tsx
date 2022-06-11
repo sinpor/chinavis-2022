@@ -46,7 +46,7 @@ export const SearchId: React.FC = observer(() => {
 
   return (
     <Space direction="vertical" className="w-full">
-      <Search placeholder="请输入网络资产线索" onSearch={onSearch} style={{ width: '100%' }} />
+      <Search placeholder="请输入网络资产线索" onSearch={onSearch} style={{ width: '100%' }} enterButton />
     </Space>
   );
 });
