@@ -84,7 +84,7 @@ export const SearchId: React.FC = observer(() => {
 				onChange={(e) => setNodeUid(e.target.value)}>
 			</Input>
 			<Button onClick={onSearch} icon={<SearchOutlined />}></Button>
-			<Button onAdd={onSearch} icon={<LoginOutlined />}></Button>
+			<Button onClick={onAdd} icon={<LoginOutlined />}></Button>
 		</Space>
 	);
 });
