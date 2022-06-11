@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 // import { request } from "../../../utils/request/request";
-
 import {
   httpRequest,
   httpInit,
@@ -11,15 +10,18 @@ import {
   httpReset,
   httpResetAll,
 } from '../../../utils/request/httpRequest';
-
 import { eventBus } from '../../../utils/bus/bus';
 import { StoreContext } from '../../../store';
 import { observer } from 'mobx-react';
 import { toJS } from 'mobx';
 import { Button, Input, Space, Tooltip } from 'antd';
+import { ILinkData, INodeData, NodeTypeNames, LinkTypeNames } from '../../../types';
+
 import {
   FullscreenOutlined,
   DeleteOutlined,
+	DeleteFilled,
+	BulbFilled,
   BulbOutlined,
   EyeInvisibleOutlined,
   SaveOutlined,
@@ -35,13 +37,13 @@ export const Controls: React.FC = observer(() => {
 
   const [communityList, setCommunityList] = useState([]);
 
-  const [curCommunity, setCurCommunity] = useState(-1);
+  const [curCommunity, setCurCommunity] = useState<number>(-1);
 
   const [selectedNodes, setSelectedNodes] = useState([10]);
 
-  const [nodes, setNodes] = useState([]);
+  const [nodes, setNodes] = useState<INode[]>([]);
 
-  const [links, setLinks] = useState([]);
+  const [links, setLinks] = useState<ILink[]>([]);
 
   const [inputValue, setInputValue] = useState<string>();
 
@@ -112,6 +114,41 @@ export const Controls: React.FC = observer(() => {
       }
     });
   };
+
+  // 移除节点（按钮）
+  const deRemoveNodesBtn = () => {
+    if (!selectedNodes) {
+      alert('尚未选择节点！');
+      return;
+    }
+    if (selectedNodes.length < 10) {
+      const rpl = confirm('当前选择节点数较少，是否继续？');
+      if (!rpl) return;
+    }
+    const nodeList = [];
+    const linkList = [];
+    for (const node of nodes) {
+      if (selectedNodes.includes(node.id)) {
+        nodeList.push(node);
+      }
+    }
+    const temp = selectedNodes[0];
+    for (const link of links) {
+      if (selectedNodes.includes(link.startId) && selectedNodes.includes(link.endId)) {
+        linkList.push(link);
+      }
+    }
+    httpRemoveNodes({ nodes: selectedNodes })?.then((res) => {
+      if (!res.error) {
+        setNodes(nodeList);
+        setLinks(linkList);
+        store.updateSelectedNodes([]);
+        store.updateCurrentData({ nodes: nodeList, links: linkList });
+      }
+    });
+  };
+
+
 
   // 核心资产数据处理
   const coreBarData = (nodes, links) => {
@@ -325,13 +362,16 @@ export const Controls: React.FC = observer(() => {
           <Button icon={<FullscreenOutlined />} type="link" onClick={expandNodeBtn}></Button>
         </Tooltip>
         <Tooltip title="节点移除">
-          <Button icon={<DeleteOutlined />} type="link" onClick={removeNodesBtn}></Button>
+          <Button icon={<DeleteFilled />} type="link" onClick={removeNodesBtn}></Button>
         </Tooltip>
-        <Tooltip title="资产标记">
-          <Button icon={<BulbOutlined />} type="link" onClick={addCoreBtn}></Button>
+        <Tooltip title="移除其它节点">
+          <Button icon={<DeleteOutlined />} type="link" onClick={deRemoveNodesBtn}></Button>
         </Tooltip>
-        <Tooltip title="资产移除">
-          <Button icon={<EyeInvisibleOutlined />} type="link" onClick={removeCoreBtn}></Button>
+        <Tooltip title="标记为核心资产">
+          <Button icon={<BulbFilled />} type="link" onClick={addCoreBtn}></Button>
+        </Tooltip>
+        <Tooltip title="取消核心资产标记">
+          <Button icon={<BulbOutlined />} type="link" onClick={removeCoreBtn}></Button>
         </Tooltip>
         <Tooltip title="保存视图">
           <Button icon={<SaveOutlined />} type="link" onClick={saveViewBtn}></Button>

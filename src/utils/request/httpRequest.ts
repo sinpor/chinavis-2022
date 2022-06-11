@@ -56,6 +56,10 @@ const httpInit = () => httpRequest('GET', 'init');
 // { nodeId }
 const httpSearchNode = (param) => httpRequest('GET', 'searchNode', param);
 
+// 扩增节点
+// { nodeId }
+const httpAddNode = (param) => httpRequest('GET', 'addNode', param);
+
 // 选择社区
 // { communityId }
 const httpSelectCommunity = (param) => httpRequest('GET', 'selectCommunity', param);
@@ -88,6 +92,7 @@ export {
   httpInit,
   httpSelectCommunity,
   httpSearchNode,
+	httpAddNode,
   httpExpandNode,
   httpRemoveNodes,
   httpSetCore,
