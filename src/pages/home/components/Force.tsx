@@ -484,7 +484,7 @@ export const Force: React.FC = observer(() => {
           onChangeShow={handleChangeShow}
         />
       ) : null}
-      <div className="border rounded-xl bg-cyan-400 bg-opacity-5 border-cyan-200 p-2 right-0 w-200px z-20 absolute">
+      <div className="bg-white border rounded-xl bg-opacity-70 border-gray-200 p-2 right-0 w-200px z-20 absolute">
         <div className="text-gray-500">node strength</div>
         <div className="flex flex-col">
           <span className="text-gray-500"></span>
@@ -509,7 +509,7 @@ export const Force: React.FC = observer(() => {
           />
         </div>
       </div>
-      <div className="border rounded-xl bg-cyan-400 bg-opacity-5 border-cyan-200 p-2 p-4 bottom-0 left-0 z-1 absolute">
+      <div className="bg-white border rounded-xl bg-opacity-70 border-gray-200 p-2 p-4 bottom-0 left-0 z-20 absolute">
         <div className="font-medium mb-4 text-gray-500">节点图例</div>
         <div className=" grid gap-y-2">
           {nodeTypes.map((n) => (
@@ -531,7 +531,7 @@ export const Force: React.FC = observer(() => {
           </div>
         </div>
       </div>
-      <div className="border rounded-xl bg-cyan-400 bg-opacity-5 border-cyan-200 text-right p-2 p-4 right-0 bottom-0 z-1 absolute">
+      <div className="bg-white border rounded-xl bg-opacity-70 border-gray-200 text-right p-2 p-4 right-0 bottom-0 z-20 absolute">
         <div className="font-medium mb-4 text-gray-500">连线图例</div>
         <div className="grid text-2xs gap-y-2">
           {linkTypes.map((l) => (
