@@ -32,6 +32,7 @@ import {
 } from '@ant-design/icons';
 import { SearchNode } from './SearchNode';
 import { AppendLink } from './AppendLink';
+import { Export } from './Export';
 
 export const Controls: React.FC = observer(() => {
 	const store = useContext(StoreContext);
@@ -379,6 +380,7 @@ export const Controls: React.FC = observer(() => {
 				<SearchNode isSearch={false} />
 			</Space>
 			<Space>
+                <Export />			
 				<Tooltip title="节点扩张">
 					<Button icon={<FullscreenOutlined />} type="link" onClick={expandNodeBtn}></Button>
 				</Tooltip>
