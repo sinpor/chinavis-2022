@@ -24,7 +24,7 @@ export const NodeTable = <T extends object>(props: { data: T[]; onSelected?: (se
         dataIndex: 'name',
         ellipsis: true,
         render(v) {
-          return <Tooltip title={v}>{v}</Tooltip>;
+          return <Tooltip title={v} class="w-90px">{v}</Tooltip>;
         },
       },
       {

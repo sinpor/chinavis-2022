@@ -437,6 +437,7 @@ export const Force: React.FC = observer(() => {
 
         const clear = initChart();
 
+
         setNodes(useNodes);
         setLinks(useLinks);
 
