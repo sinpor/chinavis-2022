@@ -64,7 +64,7 @@ export const CoreBar: React.FC = observer(() => {
 				// handleIcon: 'path://M30.9,53.2C16.8,53.2,5.3,41.7,5.3,27.6S16.8,2,30.9,2C45,2,56.4,13.5,56.4,27.6S45,53.2,30.9,53.2z M30.9,3.5M36.9,35.8h-1.3z M27.8,35.8 h-1.3H27L27.8,35.8L27.8,35.8z',
 				showDetail: false,
 				showDataShadow: true,
-				maxValueSpan: 9,
+				maxValueSpan: 15,
 				minValueSpan: 4,
 				width: 0,
 				throttle: 10,
@@ -75,7 +75,7 @@ export const CoreBar: React.FC = observer(() => {
 			},
 			{
 				type: 'inside',
-				maxValueSpan: 9,
+				maxValueSpan: 15,
 				minValueSpan: 4,
 				orient: 'vertical',
 				filterMode: 'none',

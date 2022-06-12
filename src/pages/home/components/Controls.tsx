@@ -97,6 +97,7 @@ export const Controls: React.FC = observer(() => {
 		const nodeList = [];
 		const linkList = [];
 		const resNodes = new Set();
+		const removeList = [];
 
 		for (const link of links) {
 			if (!(selectedNodes.includes(link.startId) || selectedNodes.includes(link.endId))) {
@@ -109,10 +110,12 @@ export const Controls: React.FC = observer(() => {
 		for (const node of nodes) {
 			if (resNodes.has(node.id)) {
 				nodeList.push(node);
+			} else {
+				removeList.push(node.id);
 			}
 		}
 
-		httpRemoveNodes({ nodes: selectedNodes })?.then((res) => {
+		httpRemoveNodes({ nodes: [...removeList] })?.then((res) => {
 			if (!res.error) {
 				// setNodes(nodeList);
 				// setLinks(linkList);
@@ -198,11 +201,11 @@ export const Controls: React.FC = observer(() => {
 					coreNode.linkNodeIds.push(link.endId);
 				}
 			}
+			const blackNodes = [];
 			for (const linkNodeId of coreNode.linkNodeIds) {
 				const node = nodes.find((node) => node.id === linkNodeId);
 				const industries = eval(node?.industry);
-				const blackNodes = [];
-				if (industries) {
+				if (industries.length) {
 					for (const industry of industries) {
 						const el = series[industry.charCodeAt() - 'A'.charCodeAt()];
 						el.data[el.data.length - 1]++;
