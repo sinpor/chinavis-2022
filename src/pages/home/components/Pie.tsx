@@ -87,7 +87,7 @@ export const Pie: React.FC = observer(() => {
           name: 'industry',
           type: 'pie',
           radius: ['35%', '60%'],
-          center: ['50%', '55%'],
+          center: ['50%', '60%'],
           data: [],
           // roseType: 'radius',
           minAngle: 10,
@@ -164,5 +164,5 @@ export const Pie: React.FC = observer(() => {
     setHoverEvent(count);
   }, [nodes]);
 
-  return <div ref={containerRef} className="w-full h-30vh"></div>;
+  return <div ref={containerRef} className="h-full w-full"></div>;
 });
