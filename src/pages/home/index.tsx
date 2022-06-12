@@ -8,6 +8,7 @@ import { SearchId } from './components/Search';
 import { httpInit } from '../../utils/request/httpRequest';
 import { store } from '../../store';
 import StatisticCommunity from './components/StatisticCommunity';
+import { NodeTypePie } from './components/NodeTypePie';
 
 export const Home: React.FC = () => {
   useEffect(() => {
@@ -38,9 +39,14 @@ export const Home: React.FC = () => {
           <Force />
         </div>
       </div>
-      <div className="flex flex-col ml-4  w-1/5">
-        <div className="bg-white rounded-xl mb-4 p-4">
-          <Pie />
+      <div className="flex flex-col ml-4  w-1/4">
+        <div className=" flex h-1/5 mb-4">
+          <div className="bg-white rounded-xl flex-1 mr-2 p-4">
+            <Pie />
+          </div>
+          <div className="bg-white rounded-xl flex-1 ml-2 p-4">
+            <NodeTypePie />
+          </div>
         </div>
         <div className="bg-white rounded-xl  flex-1 p-4">
           <CoreBar />
